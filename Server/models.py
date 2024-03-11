@@ -97,6 +97,7 @@ class Card(db.Model, SerializerMixin):
     __tablename__ = 'Cards'
     #table columns
     id = db.Column(db.Integer, primary_key = True)
+    yg_pro_id = db.Column(db.String)     
     name = db.Column(db.String)
     description = db.Column(db.String)
     attack = db.Column(db.Integer)
@@ -119,7 +120,7 @@ class Card(db.Model, SerializerMixin):
     card_race = db.Column(db.String) #this is card type spellcaster/gemini/winged beast for monsters. For spells it is quickplay, spell, etc, for traps cont counter etc
     card_attribute = db.Column(db.String) #Null for spells/traps
     LegalDate = db.Column(db.String) #first printing or when the card became legal
-    card_image = db.Column(db.String) #Reference to location on disk
+    card_image = db.Column(db.String) #Reference to location on s3
 
    
     #ForeignKeys
@@ -221,7 +222,6 @@ class CardinDeck(db.Model, SerializerMixin):
     
     #Card in Deck event listener 
 
-
 # event.listen(CardinDeck,'before_insert',validate_card_in_deck_insert_deck)
 
 
@@ -290,15 +290,6 @@ class CardinSet(db.Model,SerializerMixin):
 
 
 #TODOLater if Time permits
-
-
-
-
-
-
-
-
-
 
 #Extra DowntheLine
     
