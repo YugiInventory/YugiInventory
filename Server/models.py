@@ -121,6 +121,7 @@ class Card(db.Model, SerializerMixin):
     card_attribute = db.Column(db.String) #Null for spells/traps
     LegalDate = db.Column(db.String) #first printing or when the card became legal
     card_image = db.Column(db.String) #Reference to location on s3
+    frameType = db.Column(db.String) #
 
    
     #ForeignKeys
