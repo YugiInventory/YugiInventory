@@ -19,6 +19,10 @@ from models import User, Card, Deck, CardinSet, Banlist, BanlistCard
 def home():
     return 'test'
 
+@app.route('/t2')
+def home2():
+    return 'jajaja'
+
 @app.route('/users')
 def users():
     userinfo = db.session.query(User).all()
