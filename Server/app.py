@@ -15,7 +15,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from config import app, db
 from models import User, Card, Deck, CardinSet, Banlist, BanlistCard
 
-
+haha = '123'
 @app.route('/')
 def home():
     return 'test'
