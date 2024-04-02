@@ -130,7 +130,7 @@ def ReconDecks(userid):
     for card_id,quantity in id_count.items():
 
         cards_owned = invent.filter(Card.id==card_id).all() #all copies of the card
-        c_name = db.session.query(Card.name).filter(Card.id==card_id).first()[]
+        c_name = db.session.query(Card.name).filter(Card.id==card_id).first()[0]
         
         owned_quantity = sum(record.quantity for record in cards_owned) if cards_owned else 0
         needed = max(0,quantity-owned_quantity)
