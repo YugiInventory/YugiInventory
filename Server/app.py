@@ -16,6 +16,7 @@ from config import app, db
 from models import User, Card, Deck, CardinSet, Banlist, BanlistCard
 
 haha = '123'
+
 @app.route('/')
 def home():
     return 'test'
@@ -41,57 +42,46 @@ def paginate(query,page, per_page):
 
 @app.route('/cards') #Load all card info. 
 def cards():
+
+    filter_mapping = {
+        'name' : lambda value: Card.name.ilike(f'%{value}%'),
+        'card_type' : lambda value: Card.card_type.ilike(f'%{value}%'), 
+        'card_attribute' : lambda value: Card.card_attribute.ilike(f'%{value}%'),
+        'card_race' : lambda value: Card.card_race.ilike(f'%{value}%'), 
+        'id' : lambda value: Card.id==value
+    }
+
     page = request.args.get('page', default=1, type=int)
     per_page = request.args.get('per_page',default=20,type=int)
 
-    #basic filter terms
-
-    # print(request.args)
     filters = []
+    
+    try:
+        for key, value in request.args.items():
+            if key in filter_mapping:
+                filter_element = filter_mapping[key](value)
+                filters.append(filter_element)
 
-    for key in request.args: 
-        print(key,request.args[key])
+        filtered_cards = Card.query.filter(*filters)
+        paginated_results = paginate(filtered_cards,page,per_page)
         
-        skip_keys = ['page','per_page']
-        must_equal = ['card_type','card_race','card_attribute'] #ilike
-        partial_equal = ['name'] #contains
+        card_list = [card.to_dict(rules=('-card_in_deck','-card_in_inventory','-card_on_banlist','-releaseSet','-card_in_set')) for card in paginated_results.items]
 
-        if key in skip_keys:
-            continue
-
-        if key == 'name':
-            filter_element = getattr(Card,key).ilike(f'%{request.args[key]}%')
-        else:
-            filter_element = getattr(Card,key).ilike(f'%{request.args[key]}%')
-
-        filters.append(filter_element)
-
-    cardinfo = Card.query.filter(*filters)
-
-    print(cardinfo)
-    
-    paginated_cards = paginate(cardinfo,page,per_page)
-
-    #cards = paginated_cards.items   #this is an instance of each card basically 1 row in table or 1 object
-
-    card_list = []
-
-    for card in paginated_cards.items:
-        card_list.append(card.to_dict(rules=('-card_in_deck','-card_in_inventory','-card_on_banlist','-releaseSet','-card_in_set')))
-
-    response_data = {
-        'cards' : card_list,
-        'page' : page,
-        'per_page': per_page,
-        'total_pages':paginated_cards.pages,
-        'total_items':paginated_cards.total
-    }
-
-    response = make_response(
-        jsonify(response_data),200)
-    
+        response_data = {
+            'cards' : card_list,
+            'page' : page,
+            'per_page' : per_page,
+            'total_pages' : paginated_results.pages,
+            'total_items' : paginated_results.total
+        }
+        response = make_response(jsonify(response_data), 200)        
+    except SQLAlchemyError as se:
+        error_message = f'Error w/ SQLAlchemy {se}'
+        return make_response(jsonify({'error': error_message}), 500)
+    except Exception as e:
+        error_message = f'Error {e}'
+        return make_response(jsonify({'error': error_message}), 500)
     return response
-
 
 ##########SET QUERIES#####################3
 
@@ -102,6 +92,7 @@ def cards():
 
 
 ######3Inventory Queries######################
+
 
 @app.route('/inventory<int:id>', methods = ['GET', 'DELETE'])
 def Userinventory(id):
@@ -139,7 +130,7 @@ def Userinventory(id):
             }
             response = make_response(jsonify(response_data),200)
         except SQLAlchemyError as se:
-            error_message = f'Error {se}'
+            error_message = f'Error w/ SQLAlchemy {se}'
             return make_response(jsonify({'error': error_message}), 500)
         except Exception as e:
             error_message = f'Error {e}'
@@ -162,16 +153,18 @@ def ReconDecks(userid):
     id_count = {}
     cards_by_deck = {}  
 
-    for val in deck_list:
-        cards_in_deck = CardinDeck.query.filter(CardinDeck.deck_id==val).all()
-        deck_name = db.session.query(Deck.name).filter(Deck.id==val).scalar()
+    for val in deck_list: #[1,2]
+        cards_in_deck = CardinDeck.query.filter(CardinDeck.deck_id==val).all() #[1,2,3,4,5]
+        deck_name = db.session.query(Deck.name).filter(Deck.id==val).scalar()  #Blackwing 
         
-        for card in cards_in_deck:
+        for card in cards_in_deck: 
 
             id_count[card.card_id] = id_count.get(card.card_id,0) + card.quantity #if it doesnt exist its 0+ quantity, 
             cards_by_deck.setdefault(card.card_id, []).append((card.quantity, deck_name, val)) #if it doesnt exist we set it to the empty list then add the tuple
 
+
     #Now we have all the cards, lets compare it against the users inventory
+            
     recon_array = []
     for card_id,quantity in id_count.items():
 
