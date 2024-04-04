@@ -83,10 +83,18 @@ def cards():
         return make_response(jsonify({'error': error_message}), 500)
     return response
 
+
+@app.route('/card/<int:card_id>')
+def card(card_id): #Single Card
+    card_info = Card.query.filter(Card.id==card_id).first()
+    if card_info:
+        response = make_response(jsonify(card_info.to_dict(rules=('-card_in_deck','-card_in_set.card_in_inventory'))),200)
+    else:
+        response = make_response({},404)
+    return response
 ##########SET QUERIES#####################3
 
-
-
+##########Deck Queries####################3
 
 ##########User Related Queries##############################3
 
