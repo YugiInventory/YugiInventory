@@ -119,7 +119,65 @@ def set_single(set_id):
     return response
 
 ##########User Related Queries##############################3
+@app.route('/user', methods = ['POST','PATCH','DELETE'])
+def user():
+    data = request.get_json()
+    if request.method == 'POST': #{"username":"sk789", "password" : "1973", "email" : "skm478@gmail.com"}
+        try:
+            new_user = User(
+                username = data['username'],
+                password_hash = data['password'],
+                email = data['email']
+            )
+            db.session.add(new_user)
+            db.session.commit()
+            response = make_response({},200)
+        except SQLAlchemyError as se:
+            print(se)
+            response = make_response({'Server Error': 'Check Logs'},500)
+        except ValueError as ve:
+            print(ve)
+            response = make_response({'Error':'Failed to Create'},400)
+    elif request.method == 'PATCH': #{"id":1, "username" : "shamallama"}
+        single_user = User.query.filter(User.id == data['id']).first()
+        if single_user:
+            for key, value in data.items():
+                if hasattr(single_user, key):
+                    setattr(single_user, key, value) 
+            try:
+                db.session.add(single_user)
+                db.session.commit()
+                response = make_response({},200) #should send back information to update page yes or no? 
+            except SQLAlchemyError as se:
+                print(se)
+                db.session.rollback()
+                response = make_response({'Error':'Check Logs'},500)
+        else:
+            response = make_response({'Error': "User does not exist"}, 404)
+    elif request.method == 'DELETE':
+        single_user = User.query.filter(User.id == data['id']).first()
+        if single_user:
+            try:
+                db.session.delete(single_user) #Set up cascade delete
+                db.session.commit()
+                response = make_response({},204)
+            except SQLAlchemyError as se:
+                print(se)
+                db.session.rollback()
+                response = make_response({'Error':'Server Error'},500)
+        else:
+            response = make_response({"Error":"User does not exist"},404)
+    return response
 
+@app.route('/users/<int:id>' , methods = ['GET'])
+def getUser(id):
+    single_user = User.query.filter(User.id==id).first()
+    if single_user:
+        response = make_response(jsonify(single_user.to_dict()), 200) #Rules to remove unnecessary information
+    else:
+        response = make_response({'Error':'No User Found'},404)
+    
+    return response
 
 ######3Inventory Queries######################
 
@@ -181,6 +239,7 @@ def modify_Card_in_Inventory():
     data = request.get_json() #Set code and rarity are necessary to find correct CardinSet_id
 
     if request.method == 'POST':
+        #{"quantity": 3, "user_id" : 1, "isFirstEd" : false, "rarity" : "Ghost Rare", "card_id":"TDGS-EN040"} Test on reqbin
         card_to_make = CardinSet.query.filter(CardinSet.card_code==data['card_id'],CardinSet.rarity==data['rarity']).first()
         if card_to_make:
             try:

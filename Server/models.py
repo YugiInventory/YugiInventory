@@ -29,7 +29,7 @@ class User(db.Model, SerializerMixin):
     #validations
     @validates('username')
     def validate_quantity(self,key,username):
-        if len(username) >0:
+        if len(username) > 0:
             return username
         raise ValueError
 
