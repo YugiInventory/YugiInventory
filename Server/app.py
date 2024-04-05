@@ -92,9 +92,31 @@ def card(card_id): #Single Card
     else:
         response = make_response({},404)
     return response
-##########SET QUERIES#####################3
 
-##########Deck Queries####################3
+
+##########SET QUERIES#####################3
+#View all sets
+#Get a single Set by id
+
+@app.route('/sets')
+def sets():
+
+    filter_mapping = {
+        'name' : lambda value: ReleaseSet.name.ilike(f'%{value}%'),
+        #'releaseDate' : lambda value: .card_type.ilike(f'%{value}%'), 
+        'set_code' : lambda value: Card.card_attribute.ilike(f'%{value}%')
+    }
+
+    set_info = ReleaseSet.query.all()
+    set_list = [pack.to_dict(only=('name','card_count','id','releaseDate','set_code')) for pack in set_info]
+    response = make_response(jsonify(set_list),200)
+    return response
+
+@app.route('/set/<int:set_id>')
+def set_single(set_id):
+    set_info = ReleaseSet.query.filter(ReleaseSet.id==set_id).first()
+    response = make_response(jsonify(set_info.to_dict(rules=('-card_in_set.card.card_in_deck','-card_in_set.card.card_on_banlist','-card_in_set.card_in_inventory'))),200)
+    return response
 
 ##########User Related Queries##############################3
 
@@ -147,6 +169,81 @@ def Userinventory(id):
         pass #DELETE inventory 
 
     return response
+
+
+#####CardinInventory#######
+#Add a card in inventory
+#Delete a card in Inventory
+#Modify a card in Inventory 
+
+@app.route('/CardinInventory', methods = ['POST', 'PATCH', 'DELETE'])
+def modify_Card_in_Inventory():
+    data = request.get_json() #Set code and rarity are necessary to find correct CardinSet_id
+
+    if request.method == 'POST':
+        card_to_make = CardinSet.query.filter(CardinSet.card_code==data['card_id'],CardinSet.rarity==data['rarity']).first()
+        if card_to_make:
+            try:
+                new_inventory_record = Inventory(
+                    quantity = data['quantity'],
+                    isFirstEd = data['isFirstEd'],
+                    user_id = data['user_id'],
+                    cardinSet_id = card_to_make.id
+                )
+                db.session.add(new_inventory_record)
+                db.session.commit()
+                response = make_response({'Sucess': 'Card Added'},201)
+            except ValueError as ve:
+                print(ve)
+                response = make_response({'error' : 'validation Error'},400)
+            except SQLAlchemyError as se:
+                print(se)
+                db.session.rollback()
+                response = make_response({'error': 'Server Error'},500)
+        else:
+            response = make_response({'Error':'Card does not exist'},404)
+    
+    elif request.method == 'DELETE':
+        #depends on how the info is on the front, we can delete with id or delete from card_id_rarity_id owned. 
+        card = Inventory.query.filter(Inventory.id == data['id']).first()
+        try:
+            db.session.delete(card)
+            db.session.commit()
+            response = make_response({},204)
+        except SQLAlchemyError as se:
+            print(se)
+            db.session.rollback()
+            response = make_response({'Error':'Check Logs'},500)
+    
+    elif request.method == 'PATCH':
+        owned_card = Inventory.query.filter(Inventory.id == data['id']).first()
+        for key, value in data.items():
+            if hasattr(owned_card, key):
+                setattr(owned_card, key, value) 
+        try:
+            db.session.add(owned_card)
+            db.session.commit()
+            response = make_response({},200) #should send back information to update page yes or no? 
+        except SQLAlchemyError as se:
+            print(se)
+            db.session.rollback()
+            response = make_response({'Error':'Check Logs'},500)
+    return response
+
+##########Deck Queries####################3
+#Create a Deck
+#Get a Deck
+
+
+#####CardinDeck########
+#Add a card in Deck
+#Delete a card in Deck
+#Modify a card in Deck
+
+@app.route('/CardinDeck', methods = ['POST', 'PATCH', 'DELETE'])
+def modify_Card_in_Deck():
+    pass
+
 
 ######Reconciliation Routes################
 
