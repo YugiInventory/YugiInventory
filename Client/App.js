@@ -7,6 +7,7 @@ import Profile from './screens/Profile';
 import Settings from './screens/Settings';
 import Decks from './screens/Decks';
 import Inventory from './screens/Inventory';
+import Login from './screens/Login'
 
 const Tab = createBottomTabNavigator()
 
@@ -33,7 +34,7 @@ const Stack = createNativeStackNavigator();
 //   );
 // }
 
-
+// Login Page must be first screen users encounter
 
 function Home() {
   return (
@@ -50,13 +51,14 @@ export default function App() {
   return (
     <NavigationContainer>
       <Stack.Navigator>
-        <Stack.Screen
+        <Login/>
+        {/* <Stack.Screen
           name="Home"
           component={Home}
           options={{ headerShown: false }}
           />
         <Stack.Screen name="Profile" component={Profile} />
-        <Stack.Screen name="Settings" component={Settings} />
+        <Stack.Screen name="Settings" component={Settings} /> */}
       </Stack.Navigator>
     </NavigationContainer>
   );
