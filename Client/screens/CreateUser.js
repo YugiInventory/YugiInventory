@@ -3,9 +3,9 @@ import { Button, Text, TextInput, StyleSheet, View } from "react-native";
 export default function CreateUser() {
   return (
     <View>
-      <TextInput text="Enter Username" />
-      <TextInput text="Enter Password" />
-      <TextInput text="Confirm Password" />
+      <TextInput placeholder="Enter Username" />
+      <TextInput placeholder="Enter Password" />
+      <TextInput placeholder="Confirm Password" />
       <Button title="Create User" />
     </View>
   );

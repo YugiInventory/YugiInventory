@@ -1,35 +1,46 @@
-import {
-  Button,
-  Text,
-  TextInput,
-  StyleSheet,
-  View,
-  Pressable,
-} from "react-native"
-import { Link } from "expo-router"
-import CreateUser from "./CreateUser"
+import { Text, TextInput, StyleSheet, View } from "react-native";
+import { Link } from "@react-navigation/native";
 
-export default function Login({ navigation }) {
+export default function Login() {
   return (
     <View>
-      <TextInput placeholder="Username" />
-      <TextInput placeholder="Password" />
-      <Button title="Login">Login</Button>
-      {/* <Link href="/CreateUser" asChild>
-        <Pressable>
-          <Text>Create User</Text>
-        </Pressable>
-      </Link> */}
-      {/* <Text style={styles.container}>Login</Text> */}
+      <Text>Placeholder for Logo</Text>
+      <View style={styles.container}>
+        <TextInput placeholder="Username" />
+        <TextInput placeholder="Password" />
+        <View style={styles.buttonSuite}>
+          <Link to={{ screen: "CreateUser" }} style={styles.buttons}>
+            Login
+          </Link>
+          <Link to={{ screen: "CreateUser" }} style={styles.buttons}>
+            Create User
+          </Link>
+        </View>
+      </View>
     </View>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
     backgroundColor: "#fff",
+  },
+  buttonSuite: {
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  buttons: {
     alignItems: "center",
     justifyContent: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 32,
+    borderRadius: 4,
+    elevation: 3,
+    backgroundColor: "#2196f3",
+    color: "white",
   },
-})
+});
