@@ -9,7 +9,7 @@ export default function Login() {
         <TextInput placeholder="Username" />
         <TextInput placeholder="Password" />
         <View style={styles.buttonSuite}>
-          <Link to={{ screen: "CreateUser" }} style={styles.buttons}>
+          <Link to={{ screen: "Home" }} style={styles.buttons}>
             Login
           </Link>
           <Link to={{ screen: "CreateUser" }} style={styles.buttons}>

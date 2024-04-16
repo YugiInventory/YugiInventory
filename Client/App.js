@@ -1,19 +1,19 @@
-import { StatusBar } from "expo-status-bar"
-import { Button, Text, TextInput, StyleSheet, View } from "react-native"
-import { NavigationContainer } from "@react-navigation/native"
-import { createNativeStackNavigator } from "@react-navigation/native-stack"
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs"
-import Login from "./screens/Login"
-import CreateUser from "./screens/CreateUser"
-import Profile from "./screens/Profile"
-import Settings from "./screens/Settings"
+import { StatusBar } from "expo-status-bar";
+import { Button, Text, TextInput, StyleSheet, View } from "react-native";
+import { NavigationContainer } from "@react-navigation/native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import Login from "./screens/Login";
+import CreateUser from "./screens/CreateUser";
+import Profile from "./screens/Profile";
+import Settings from "./screens/Settings";
 // import Decks from "./screens/Decks"
 // import Inventory from "./screens/Inventory"
-import Home from "./screens/Home"
+import Home from "./screens/Home";
 
-const Tab = createBottomTabNavigator()
+// const Tab = createBottomTabNavigator()
 
-const Stack = createNativeStackNavigator()
+const Stack = createNativeStackNavigator();
 
 // export default function App() {
 //   return (
@@ -40,7 +40,7 @@ export default function App() {
         <Stack.Screen name="Settings" component={Settings} />
       </Stack.Navigator>
     </NavigationContainer>
-  )
+  );
 }
 const styles = StyleSheet.create({
   container: {
@@ -49,4 +49,4 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-})
+});

@@ -1,6 +1,12 @@
-import { Button, Text, TextInput, StyleSheet, View } from "react-native"
-import { createNativeStackNavigator } from "@react-navigation/native-stack"
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs"
+import { Button, Text, TextInput, StyleSheet, View } from "react-native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import Profile from "./Profile";
+import Settings from "./Settings";
+import Inventory from "./Inventory";
+import Decks from "./Decks";
+
+const Tab = createBottomTabNavigator();
 
 export default function Home() {
   return (
@@ -10,7 +16,7 @@ export default function Home() {
       <Tab.Screen name="Inventory" component={Inventory} />
       <Tab.Screen name="Settings" component={Settings} />
     </Tab.Navigator>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
@@ -21,4 +27,4 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     textAlign: "center",
   },
-})
+});
