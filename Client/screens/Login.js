@@ -1,7 +1,15 @@
-import { Text, TextInput, StyleSheet, View } from "react-native";
-import { Link } from "@react-navigation/native";
+import React from "react";
+import { Text, TextInput, StyleSheet, View, Button } from "react-native";
 
-export default function Login() {
+export default function Login({ navigation }) {
+  const handleLogin = () => {
+    navigation.navigate("Home");
+  };
+
+  const handleCreateUser = () => {
+    navigation.navigate("CreateUser");
+  };
+
   return (
     <View>
       <Text>Placeholder for Logo</Text>
@@ -9,12 +17,8 @@ export default function Login() {
         <TextInput placeholder="Username" />
         <TextInput placeholder="Password" />
         <View style={styles.buttonSuite}>
-          <Link to={{ screen: "Home" }} style={styles.buttons}>
-            Login
-          </Link>
-          <Link to={{ screen: "CreateUser" }} style={styles.buttons}>
-            Create User
-          </Link>
+          <Button title="Login" onPress={handleLogin} />
+          <Button title="Create User" onPress={handleCreateUser} />
         </View>
       </View>
     </View>
