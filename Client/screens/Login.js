@@ -1,6 +1,7 @@
 import React from "react";
 import { Text, TextInput, StyleSheet, View, Button } from "react-native";
-import { BASE_URL } from "../index";
+// import { BASE_URL } from "../index";
+import CardInfo from "./CardInfo";
 
 export default function Login({ navigation }) {
   const handleLogin = () => {
@@ -21,6 +22,7 @@ export default function Login({ navigation }) {
           <Button title="Login" onPress={handleLogin} />
           <Button title="Create User" onPress={handleCreateUserScreen} />
         </View>
+        <CardInfo />
       </View>
     </View>
   );

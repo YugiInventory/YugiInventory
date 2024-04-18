@@ -1,30 +1,32 @@
 import { Button, Text, TextInput, StyleSheet, View } from "react-native";
-import {useState} from 'react';
+import { useState } from "react";
 import { BASE_URL } from "../index";
 
-
 export default function CardInfo() {
-    const randomCard = async (cardId = 10) => {
-        const card = await fetch(`BASE_URL/card/${cardId}`)
-        return (
-            <View>
-                <h1>{card.name}</h1>
-            </View>
-        )
+  const randomCard = async () => {
+    try {
+      const response = await fetch(`${BASE_URL}/card/10`)
+        .then((response) => response.json())
+        .then((data) => console.log(data.card_attribute));
+    } catch (err) {
+      console.error(err.message);
     }
-    return (
+  };
+  return (
     <View>
-        <Button title="Get Information" onPress={() => randomCard(10)}>Get Information</Button>
+      <Button title="Get Information" onPress={() => randomCard(123)}>
+        Get Information
+      </Button>
     </View>
-);
+  );
 }
 
 const styles = StyleSheet.create({
-    container: {
+  container: {
     flex: 1,
     backgroundColor: "#fff",
     alignItems: "center",
     justifyContent: "center",
     textAlign: "center",
-    },
-});  
+  },
+});
