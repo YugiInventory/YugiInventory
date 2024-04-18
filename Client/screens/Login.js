@@ -1,12 +1,13 @@
 import React from "react";
 import { Text, TextInput, StyleSheet, View, Button } from "react-native";
+import { BASE_URL } from "../index";
 
 export default function Login({ navigation }) {
   const handleLogin = () => {
     navigation.navigate("Home");
   };
 
-  const handleCreateUser = () => {
+  const handleCreateUserScreen = () => {
     navigation.navigate("CreateUser");
   };
 
@@ -18,7 +19,7 @@ export default function Login({ navigation }) {
         <TextInput placeholder="Password" />
         <View style={styles.buttonSuite}>
           <Button title="Login" onPress={handleLogin} />
-          <Button title="Create User" onPress={handleCreateUser} />
+          <Button title="Create User" onPress={handleCreateUserScreen} />
         </View>
       </View>
     </View>

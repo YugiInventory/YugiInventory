@@ -1,29 +1,11 @@
-import { StatusBar } from "expo-status-bar";
+// import { StatusBar } from "expo-status-bar";
 import { Button, Text, TextInput, StyleSheet, View } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import Login from "./screens/Login";
-import CreateUser from "./screens/CreateUser";
-import Profile from "./screens/Profile";
-import Settings from "./screens/Settings";
-// import Decks from "./screens/Decks"
-// import Inventory from "./screens/Inventory"
-import Home from "./screens/Home";
-
-// const Tab = createBottomTabNavigator()
+// import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import {Login, CreateUser, Profile, Settings, Decks, Inventory, Home} from './index'
 
 const Stack = createNativeStackNavigator();
-
-// export default function App() {
-//   return (
-//     <NavigationContainer>
-//       <Stack.Navigator>
-//         <Stack.Screen name='Home' component={HomeScreen} />
-//       </Stack.Navigator>
-//     </NavigationContainer>
-//   );
-// }
 
 export default function App() {
   return (
