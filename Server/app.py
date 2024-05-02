@@ -25,6 +25,8 @@ def item_not_found_response():
 def validation_error_response():
     return jsonify({'Error': 'Validation Error'}), 403
 
+def bad_request_response():
+    return jsonify({'Error':'Bad Request'}),400
 #item_not_found_response = make_response({'Error':'Item not found'},404)
 
 def paginate(query,page, per_page):
@@ -47,8 +49,8 @@ def cards():
         'name' : lambda value: Card.name.ilike(f'%{value}%'),
         'card_type' : lambda value: Card.card_type.ilike(f'%{value}%'), 
         'card_attribute' : lambda value: Card.card_attribute.ilike(f'%{value}%'),
-        'card_race' : lambda value: Card.card_race.ilike(f'%{value}%'), 
-        'id' : lambda value: Card.id==value
+        'card_race' : lambda value: Card.card_race.ilike(f'%{value}%')
+        #'id' : lambda value: Card.id==value
     }
 
     page = request.args.get('page', default=1, type=int)
@@ -77,7 +79,7 @@ def cards():
         response = make_response(jsonify(response_data), 200)        
     except SQLAlchemyError as se:
         error_message = f'Error w/ SQLAlchemy {se}'
-        return make_response(jsonify({'error': error_message}), 500)
+        return server_error_response()
     except Exception as e:
         error_message = f'Error {e}'
         return make_response(jsonify({'error': error_message}), 500)
@@ -88,9 +90,9 @@ def cards():
 def card(card_id): #Single Card
     card_info = Card.query.filter(Card.id==card_id).first()
     if card_info:
-        response = make_response(jsonify(card_info.to_dict(rules=('-card_in_deck','-card_in_set.card_in_inventory'))),200)
+        response = make_response(jsonify(card_info.to_dict(rules=('-card_in_deck','-card_in_set.card_in_inventory','-card_on_banlist'))),200)
     else:
-        response = make_response({},404)
+        response = item_not_found_response()
     return response
 
 
@@ -114,11 +116,18 @@ def sets():
 
 @app.route('/set/<int:set_id>')
 def set_single(set_id):
-    set_info = ReleaseSet.query.filter(ReleaseSet.id==set_id).first()
-    response = make_response(jsonify(set_info.to_dict(rules=('-card_in_set.card.card_in_deck','-card_in_set.card.card_on_banlist','-card_in_set.card_in_inventory'))),200)
+    try:
+        set_info = ReleaseSet.query.filter(ReleaseSet.id==set_id).first()
+        response = make_response(jsonify(set_info.to_dict(rules=('-card_in_set.card.card_in_deck','-card_in_set.card.card_on_banlist','-card_in_set.card_in_inventory','-card_in_set.releaseSet','card_in_set.releaseSet.id'))),200)
+        #card image, id only thing we need from the card section. 
+    except SQLAlchemyError as se:
+        print(se)
+        response = server_error_response()
     return response
 
 ##########User Related Queries##############################3
+
+
 @app.route('/user', methods = ['POST','PATCH','DELETE'])
 def user():
     data = request.get_json()
@@ -134,7 +143,7 @@ def user():
             response = make_response({},200)
         except SQLAlchemyError as se:
             print(se)
-            response = make_response({'Server Error': 'Check Logs'},500)
+            response = server_error_response()
         except ValueError as ve:
             print(ve)
             response = make_response({'Error':'Failed to Create'},400)
@@ -151,9 +160,9 @@ def user():
             except SQLAlchemyError as se:
                 print(se)
                 db.session.rollback()
-                response = make_response({'Error':'Check Logs'},500)
+                response = server_error_response()
         else:
-            response = make_response({'Error': "User does not exist"}, 404)
+            response = item_not_found_response()
     elif request.method == 'DELETE':
         single_user = User.query.filter(User.id == data['id']).first()
         if single_user:
@@ -164,18 +173,18 @@ def user():
             except SQLAlchemyError as se:
                 print(se)
                 db.session.rollback()
-                response = make_response({'Error':'Server Error'},500)
+                response = server_error_response()
         else:
-            response = make_response({"Error":"User does not exist"},404)
+            response = item_not_found_response()
     return response
 
 @app.route('/users/<int:id>' , methods = ['GET'])
 def getUser(id):
     single_user = User.query.filter(User.id==id).first()
     if single_user:
-        response = make_response(jsonify(single_user.to_dict()), 200) #Rules to remove unnecessary information
+        response = make_response(jsonify(single_user.to_dict(only=('created_at','profile','username'))), 200) #Rules to remove unnecessary information
     else:
-        response = make_response({'Error':'No User Found'},404)
+        response = item_not_found_response()
     
     return response
 
@@ -206,7 +215,7 @@ def Userinventory(id):
             per_page = request.args.get('per_page', default=20,type=int)
             paginated_inventory = paginate(inventory_filtered_query,page,per_page)
 
-            card_list = [card.to_dict(rules=('-cardinSet.card.card_in_deck',)) for card in paginated_inventory.items]
+            card_list = [card.to_dict(rules=('-cardinSet.card.card_in_deck','-user','-cardinSet.releaseSet','-cardinSet.releaseSet.id''-cardinSet.card.card_on_banlist','-cardinSet.card')) for card in paginated_inventory.items]
 
             response_data = {
                 'cards': card_list,
@@ -214,11 +223,11 @@ def Userinventory(id):
                 'per_page' : per_page,
                 'total_pages' : paginated_inventory.pages,
                 'total_items' : paginated_inventory.total
-            }
+             }
             response = make_response(jsonify(response_data),200)
         except SQLAlchemyError as se:
             error_message = f'Error w/ SQLAlchemy {se}'
-            return make_response(jsonify({'error': error_message}), 500)
+            return server_error_response()
         except Exception as e:
             error_message = f'Error {e}'
             return make_response(jsonify({'error': error_message}), 500)
@@ -268,13 +277,13 @@ def modify_Card_in_Inventory():
                     response = make_response({'Sucess': 'Card Added'},201)
                 except ValueError as ve:
                     print(ve)
-                    response = make_response({'error' : 'validation Error'},400)
+                    response = bad_request_response()
                 except SQLAlchemyError as se:
                     print(se)
                     db.session.rollback()
-                    response = make_response({'error': 'Server Error'},500)
+                    response = server_error_response()
         else:
-            response = make_response({'Error':'Card does not exist'},404)
+            response = item_not_found_response()
     
     elif request.method == 'DELETE':
         #depends on how the info is on the front, we can delete with id or delete from card_id_rarity_id owned. 
@@ -286,7 +295,7 @@ def modify_Card_in_Inventory():
         except SQLAlchemyError as se:
             print(se)
             db.session.rollback()
-            response = make_response({'Error':'Check Logs'},500)
+            response = server_error_response()
     
     elif request.method == 'PATCH':
         owned_card = Inventory.query.filter(Inventory.id == data['id']).first()
@@ -296,11 +305,11 @@ def modify_Card_in_Inventory():
         try:
             db.session.add(owned_card)
             db.session.commit()
-            response = make_response({},200) #should send back information to update page yes or no? 
+            response = make_response({},200) #should send back information to update page yes or no?, no since we already have that value stored in the front end. 
         except SQLAlchemyError as se:
             print(se)
             db.session.rollback()
-            response = make_response({'Error':'Check Logs'},500)
+            response = server_error_response()
     return response
 
 ##########Deck Queries####################3
@@ -394,9 +403,9 @@ def singleDeck(deck_id):
             response = make_response(jsonify(single_deck.to_dict()),200)
         except SQLAlchemyError as se:
             print(se)
-            response = make_response({'Error': 'Server Error'},500)
+            response = server_error_response()
     else:
-        response = make_response({"Error": "Deck not found"},404)
+        response = item_not_found_response()
     return response
 
 
@@ -427,6 +436,7 @@ def modify_Card_in_Deck():
                 print(ve)
                 response = validation_error_response()
             except SQLAlchemyError as se:
+                print(se)
                 db.session.rollback()
                 response = server_error_response()
         else:
