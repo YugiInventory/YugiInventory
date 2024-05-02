@@ -1,8 +1,11 @@
-import {Text, StyleSheet} from 'react-native';
+import {Text, Button, StyleSheet, View} from 'react-native';
 
 export default function Profile() {
   return (
+    <View>
     <Text style={styles.container}>Profile</Text>
+    <Button>Logout</Button>
+    </View>
   )
 }
 

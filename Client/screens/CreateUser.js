@@ -15,20 +15,25 @@ export default function CreateUser() {
     },
   });
   const onSubmit = (data) => {
-    const username = fetch(`${BASE_URL}/user`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        username: data.username,
-        password: data.password,
-        email: null,
-      }),
-    }).then((response) => {
-      const res = response.json();
-      console.log(res);
-    });
+    if (data.password !== data.confirmPassword) {
+      console.log('Passwords must match!')
+      return
+    } else {
+      const user = fetch(`${BASE_URL}/user`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username: data.username,
+          password: data.password,
+          email: null,
+        }),
+      }).then((response) => {
+        const res = response.json();
+        console.log(res, user);
+      });
+    }
   };
 
   return (
