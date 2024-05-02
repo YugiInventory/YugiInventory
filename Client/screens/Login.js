@@ -1,6 +1,6 @@
 import React from "react";
 import { Text, TextInput, StyleSheet, View, Button } from "react-native";
-// import { BASE_URL } from "../index";
+import { BASE_URL } from "../index";
 import CardInfo from "./CardInfo";
 
 export default function Login({ navigation }) {

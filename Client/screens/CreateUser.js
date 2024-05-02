@@ -1,5 +1,6 @@
 import { Text, View, TextInput, Button, Alert, StyleSheet } from "react-native";
 import { useForm, Controller } from "react-hook-form";
+import { BASE_URL } from "../index";
 
 export default function CreateUser() {
   const {
@@ -13,7 +14,22 @@ export default function CreateUser() {
       confirmPassword: "",
     },
   });
-  const onSubmit = (data) => console.log(data);
+  const onSubmit = (data) => {
+    const username = fetch(`${BASE_URL}/user`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        username: data.username,
+        password: data.password,
+        email: null,
+      }),
+    }).then((response) => {
+      const res = response.json();
+      console.log(res);
+    });
+  };
 
   return (
     <View>
