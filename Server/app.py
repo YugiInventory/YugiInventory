@@ -515,6 +515,28 @@ def ReconDecks(userid):
     response = make_response(jsonify(recon_array), 200)
     return response
 
+@app.route('/Login', methods = ['POST'])
+def Login():
+
+    user_info = request.get_json()     
+    user = User.query.filter(User.username == user_info['username']).first()
+    if user:
+        pass_match = user.authenticate(user_info['password'])
+        if pass_match: 
+            # session['user_id'] = user.id
+            # print(session)
+
+            response = make_response( 
+                jsonify(user.to_dict()), 201
+            )
+        else:
+           response = make_response({},401)
+    else:
+        response = make_response({},404)
+    
+    return response
+
+    
 
 if __name__ == '__main__':
 
