@@ -16,28 +16,28 @@ export default function Login({ navigation }) {
     },
   });
   const onSubmit = async (data) => {
-    const user = await fetch(`${BASE_URL}/user`, {
-      method: "GET",
+    const userLogin = await fetch(`${BASE_URL}/Login`, {
+      method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        username: user.username,
-        password: user.password,
-        email: null,
+        username: data.username,
+        password: data.password,
       }),
     }).then((response) => {
       const res = response.json();
       console.log(res);
-      if (data.username === user.username && data.password === user.password) {
-        navigation.navigate("Home")
+      if (res.status === 201) {
+        // const userInfo = {}
+        console.log("Success");
+        navigation.navigate("Home");
       } else {
-        console.log(data, 'data')
-        console.log("Login information incorrect")
+        console.log("Unsuccessful");
+        console.log(res.status);
       }
     });
   };
-
 
   // const handleLogin = () => {
   //   navigation.navigate("Home");
@@ -49,7 +49,7 @@ export default function Login({ navigation }) {
 
   return (
     <View>
-       <Controller
+      <Controller
         control={control}
         rules={{
           required: true,
