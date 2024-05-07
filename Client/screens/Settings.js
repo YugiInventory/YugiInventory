@@ -1,8 +1,8 @@
-import { Text, StyleSheet } from "react-native"
+import { Text, StyleSheet } from "react-native";
 
-export default function Settings() {
-  return <Text style={styles.container}>Settings</Text>
-}
+const Settings = () => {
+  return <Text style={styles.container}>Settings</Text>;
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -12,4 +12,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     textAlign: "center",
   },
-})
+});
+
+export default Settings;

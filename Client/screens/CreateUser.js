@@ -1,8 +1,8 @@
 import { Text, View, TextInput, Button, Alert, StyleSheet } from "react-native";
 import { useForm, Controller } from "react-hook-form";
-import { BASE_URL } from "../index";
+import { BASE_URL } from "../App";
 
-export default function CreateUser() {
+const CreateUser = () => {
   const {
     control,
     handleSubmit,
@@ -16,8 +16,8 @@ export default function CreateUser() {
   });
   const onSubmit = (data) => {
     if (data.password !== data.confirmPassword) {
-      console.log('Passwords must match!')
-      return
+      console.log("Passwords must match!");
+      return;
     } else {
       const user = fetch(`${BASE_URL}/user`, {
         method: "POST",
@@ -88,7 +88,7 @@ export default function CreateUser() {
       <Button title="Submit" onPress={handleSubmit(onSubmit)} />
     </View>
   );
-}
+};
 
 // const styles = StyleSheet.create({
 //   container: {
@@ -99,3 +99,5 @@ export default function CreateUser() {
 //     textAlign: "center",
 //   },
 // });
+
+export default CreateUser;

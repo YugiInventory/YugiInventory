@@ -1,8 +1,8 @@
 import { Button, Text, TextInput, StyleSheet, View } from "react-native";
 import { useState } from "react";
-import { BASE_URL } from "../index";
+import BASE_URL from "../index";
 
-export default function CardInfo() {
+const CardInfo = () => {
   const randomCard = async () => {
     try {
       const response = await fetch(`${BASE_URL}/card/10`)
@@ -19,7 +19,7 @@ export default function CardInfo() {
       </Button>
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -30,3 +30,5 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
 });
+
+export default CardInfo;

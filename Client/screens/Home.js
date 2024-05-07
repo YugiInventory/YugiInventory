@@ -8,7 +8,7 @@ import Decks from "./Decks";
 
 const Tab = createBottomTabNavigator();
 
-export default function Home() {
+const Home = () => {
   return (
     <Tab.Navigator>
       <Tab.Screen style={styles.container} name="Profile" component={Profile} />
@@ -17,7 +17,7 @@ export default function Home() {
       <Tab.Screen name="Settings" component={Settings} />
     </Tab.Navigator>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -28,3 +28,5 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
 });
+
+export default Home;

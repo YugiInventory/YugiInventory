@@ -1,10 +1,10 @@
 import React from "react";
 import { Text, TextInput, StyleSheet, View, Button } from "react-native";
-import { BASE_URL } from "../index";
+import BASE_URL from "../index";
 import { useForm, Controller } from "react-hook-form";
 import CardInfo from "./CardInfo";
 
-export default function Login({ navigation }) {
+const Login = ({ navigation }) => {
   const {
     control,
     handleSubmit,
@@ -96,7 +96,7 @@ export default function Login({ navigation }) {
       </View> */}
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -121,3 +121,5 @@ const styles = StyleSheet.create({
     color: "white",
   },
 });
+
+export default Login;
