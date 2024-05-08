@@ -5,9 +5,21 @@ from sqlalchemy.orm import validates
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy_serializer import SerializerMixin
 from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.dialects.postgresql import UUID
 
 
 from config import db, bcrypt
+
+class RefreshToken(db.Model, SerializerMixin):
+    __tablename__ = 'RefreshTokens'
+    id = db.Column(db.Integer, primary_key = True)
+    token = db.Column(UUID(as_uuid=True))
+    expiration_time = db.Column(db.DateTime)
+    #FK
+    user_id = db.Column(db.Integer, db.ForeignKey('Users.id'), nullable=False)
+    
+    serialize_rules = ('-user_id',)
+
 
 class User(db.Model, SerializerMixin):
     __tablename__ = 'Users'
@@ -25,6 +37,7 @@ class User(db.Model, SerializerMixin):
     #relationships    
     card_in_inventory = db.relationship("Inventory" , backref = "user")
     user_decks = db.relationship("Deck",backref = "user")
+    refresh_token = db.relationship('RefreshToken', backref = "user")
 
     #validations
     @validates('username')
@@ -52,7 +65,7 @@ class User(db.Model, SerializerMixin):
     #Serializer Rules
 
 
-    serialize_rules = ('-card_in_inventory.user','-user_decks.user','-card_in_inventory.card','-user_decks.card_in_deck')
+    serialize_rules = ('-card_in_inventory.user','-user_decks.user','-card_in_inventory.card','-user_decks.card_in_deck','-refresh_token')
     
     
 

@@ -8,6 +8,9 @@ from flask_restful import Api, Resource
 from flask_migrate import Migrate
 from flask import Flask, make_response, jsonify, request, session
 import os
+import uuid
+import jwt
+import datetime
 from sqlalchemy.exc import SQLAlchemyError
 
 # Local imports
@@ -32,6 +35,89 @@ def bad_request_response():
 def paginate(query,page, per_page):
     return query.paginate(page=page,per_page=per_page) #these all have to be deinfed with keyword only?
 
+
+def issue_jwt_token(username,user_id):
+    token = jwt.encode({'username':username,'user_id':user_id,'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=15)},app.config['SECRET_KEY'])            
+    
+    # token = jwt.encode({'username':user.username,'user_id':user.id,'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=1)},app.config['SECRET_KEY'])            
+    # print(token)
+    # print('test decode')
+    # print(jwt.decode(token, app.config['SECRET_KEY'], algorithms="HS256"))
+
+    return token
+
+def issue_refresh_token(user_id,prev_refresh_token_obj=None):
+    new_uuid = uuid.uuid4()
+    expiration_time = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=60)
+
+    if prev_refresh_token_obj:
+        prev_refresh_token_obj.token = new_uuid
+        prev_refresh_token_obj.expiration_time = expiration_time
+        refresh_token = prev_refresh_token_obj
+    else:
+        refresh_token = RefreshToken(
+            token = new_uuid,
+            user_id = user_id,
+            expiration_time = expiration_time
+        )  
+    return refresh_token
+
+    # new_uuid = uuid.uuid4()
+    # expiration_time = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=60)
+
+    # if prev_refresh_token:
+    #     prev_refresh_token.token = new_uuid
+    #     prev_refresh_token.expiration_time = expiration_time
+    # else:
+    #     prev_refresh_token = RefreshToken(
+    #         token = new_uuid,
+    #         user_id = user.id,
+    #         expiration_time = expiration_time
+    #     )
+
+def invalidate_jwt_token(): #15 minute windows can make this somewhat unnecessary. 
+    #scenarios where this would be needed. token payload information changes, users credential changes (password/username change)
+    #if the hashed password is included in the jwt, then when a user changes their password it would invalidate the jwt since the signature would change.
+
+    pass
+def invalidate_refresh_token(user_id):
+    #this would be deleted from the server
+    refreshToken = RefreshToken.query.filter(RefreshToken.user_id == user_id).first()
+    if refreshToken:
+        db.session.delete(refreshToken)
+        db.session.commit()
+        return True
+    return False
+
+
+def handle_expired_jwt(token, key, refreshToken=None):
+    expired_payload = jwt.decode(token,key=key, algorithms = ["HS256"], verify=False)
+    if refreshToken:
+        #check if valid refresh
+        known_token = RefreshToken.query.filter(RefreshToken.user_id==expired_payload.user_id).first()
+        if known_token and known_token.token == refreshToken:
+            new_JWT_Token = issue_jwt_token(expired_payload.username, expired_payload.user_id)
+            return new_JWT_Token, expired_payload
+        else:
+            #Expired JWT and Invalid Refresh require relogin and destroy saved refresh token.
+            invalidate_refresh_token(expired_payload.user_id)
+    else:
+        #Error require relog no Refresh Token
+        pass
+    return None, None , None
+
+def validate_jwt(token, key = app.config['SECRET_KEY'], refreshToken = None):
+    try:
+        decoded_token = jwt.decode(token,key,algorithms=["HS256"])
+        return decoded_token
+    except jwt.ExpiredSignatureError:
+        new_jwt, decoded_payload = handle_expired_jwt(token=token,key=key,refreshToken=refreshToken)
+        if new_jwt:
+            return decoded_payload
+    except jwt.InvalidTokenError:
+        pass
+
+@app.route('/')
 
 @app.route('/')
 def home():
@@ -520,14 +606,22 @@ def Login():
 
     user_info = request.get_json()     
     user = User.query.filter(User.username == user_info['username']).first()
+    prev_refresh_token_obj = RefreshToken.query.filter(RefreshToken.user_id == user.id).first()
+    print(user)
     if user:
         pass_match = user.authenticate(user_info['password'])
-        if pass_match: 
-            # session['user_id'] = user.id
-            # print(session)
+        if pass_match:
+            #create JWT and refresh token
+            token = issue_jwt_token(user.username,user.id)            
+            refresh_token = issue_refresh_token(user.id,prev_refresh_token_obj)
+            
+            
+            db.session.add(refresh_token)
+            db.session.commit()
+            
 
             response = make_response( 
-                jsonify(user.to_dict()), 201
+                jsonify(user.to_dict(), token,refresh_token.token), 201
             )
         else:
            response = make_response({},401)
@@ -536,7 +630,17 @@ def Login():
     
     return response
 
-    
+@app.route('/Logout', methods = ["POST"])
+def logout():
+    #Send back the user id, delete that entry from the refreshToken table. 
+    data = request.get_json()
+    #expect the user_id 
+
+    isLogOut = invalidate_refresh_token(data['user_id'])
+    if isLogOut:
+        response = make_response({},200)
+        return response
+    return make_response({},401)
 
 if __name__ == '__main__':
 

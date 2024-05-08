@@ -18,6 +18,7 @@ psycopg2-binary = "*"
 gunicorn = "*"
 python-dotenv = "*"
 boto3 = "*"
+pyjwt = "*"
 
 [dev-packages]
 
