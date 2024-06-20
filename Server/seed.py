@@ -14,8 +14,8 @@ import time
 
 #We fill out information on the ReleaseSets, Cards, CardsinSets
 
-session = boto3.Session(profile_name='shamsk')
-s3 = session.client('s3')
+# session = boto3.Session(profile_name='shamsk')
+# s3 = session.client('s3')
 
 card_endpoint = 'https://db.ygoprodeck.com/api/v7/cardinfo.php'
 set_endpoint = 'https://db.ygoprodeck.com/api/v7/cardsets.php'
@@ -26,7 +26,7 @@ failed_cards = []
 failed_released_cards = []
 # released_cards = []
 
-def upload_images(img_url,id):
+def upload_images(img_url,id): #imgURL is the ygoAPI link to the image, id is the ygproid from the API
     bucket_name = 'yugitorybuckettest'
     s3_key = f'{id}.jpg'
     s3_url = f'https://{bucket_name}.s3.amazonaws.com/{s3_key}' 
@@ -112,7 +112,7 @@ def getinitcards(set2idmap):
                 card_type = 'Monster'
 
             #image upload section                
-            s3_url = upload_images(img_url=img_url,id=card_id)
+            s3_url = 'temp' #upload_images(img_url=img_url,id=card_id)
             #create the card 
             try:
                 init_card = Card(

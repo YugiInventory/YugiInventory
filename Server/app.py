@@ -3,7 +3,6 @@
 # Standard library imports
 
 # Remote library imports
-from models import *
 from flask_restful import Api, Resource
 from flask_migrate import Migrate
 from flask import Flask, make_response, jsonify, request, session
@@ -14,9 +13,9 @@ import datetime
 from sqlalchemy.exc import SQLAlchemyError
 
 # Local imports
-
+from models import *
 from config import app, db
-from models import User, Card, Deck, CardinSet, Banlist, BanlistCard
+from models import User, Card, Deck, CardinSet, Banlist, BanlistCard , RefreshToken
 
 ###Helper Functions####
 def server_error_response():
@@ -143,7 +142,6 @@ def cards():
     per_page = request.args.get('per_page',default=20,type=int)
 
     filters = []
-    
     try:
         for key, value in request.args.items():
             if key in filter_mapping:
@@ -168,6 +166,7 @@ def cards():
         return server_error_response()
     except Exception as e:
         error_message = f'Error {e}'
+        print(error_message)
         return make_response(jsonify({'error': error_message}), 500)
     return response
 
@@ -645,3 +644,5 @@ def logout():
 if __name__ == '__main__':
 
     app.run(port=5555, debug=True)
+
+
