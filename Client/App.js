@@ -5,6 +5,7 @@ import Login from "./screens/Login";
 import CreateUser from "./screens/CreateUser";
 import Profile from "./screens/Profile";
 import Settings from "./screens/Settings";
+import Inventory from "./screens/Inventory";
 import Home from "./screens/Home";
 
 const Stack = createNativeStackNavigator();
@@ -12,8 +13,8 @@ const Stack = createNativeStackNavigator();
 export default function App() {
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="Login">
-        <Stack.Screen name="Login" component={Login} />
+      <Stack.Navigator initialRouteName="Inventory">
+        <Stack.Screen name="Login" component={Inventory} />
         <Stack.Screen name="CreateUser" component={CreateUser} />
         <Stack.Screen
           name="Home"
