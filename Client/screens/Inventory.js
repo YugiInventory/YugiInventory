@@ -7,6 +7,7 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from "react-native";
+import BASE_URL from "../config";
 
 const Inventory = () => {
   const [allCards, setAllCards] = useState({ cards: [] });
@@ -17,7 +18,7 @@ const Inventory = () => {
       try {
         const response = await fetch(`${BASE_URL}/cards`);
         const data = await response.json();
-        console.log(data);
+        // console.log(data);
         setAllCards(data);
         setIsLoading(false);
       } catch (error) {
