@@ -6,6 +6,7 @@ import {
   FlatList,
   StyleSheet,
   ActivityIndicator,
+  Button,
 } from "react-native";
 import BASE_URL from "../config";
 
@@ -30,6 +31,15 @@ const Inventory = () => {
     fetchCards();
   }, []);
 
+  const QuantityModal = () => {
+    return (
+      <View>
+        <Button title="+" />
+        <Text style={styles.quantityCount}>0</Text>
+        <Button title="-" />
+      </View>
+    );
+  };
   const renderItem = ({ item }) => (
     <View style={styles.row}>
       <Image source={{ uri: item.card_image }} style={styles.cardImage} />
@@ -40,14 +50,16 @@ const Inventory = () => {
         </Text>
         {item.card_type === "Monster" && (
           <View style={styles.statsContainer}>
-            <Text style={styles.cell}>ATK: {item.attack}</Text>
-            <Text style={styles.cell}>DEF: {item.defense}</Text>
+            <Text style={styles.cell}>
+              ATK: {item.attack} DEF: {item.defense}
+            </Text>
           </View>
         )}
         <Text style={styles.cellDescription} numberOfLines={2}>
           {item.description}
         </Text>
       </View>
+      <QuantityModal />
     </View>
   );
 
@@ -71,6 +83,7 @@ const Inventory = () => {
         data={allCards.cards}
         keyExtractor={(item) => item.id.toString()}
         renderItem={renderItem}
+        showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           <Text style={styles.emptyText}>No cards found</Text>
         }
@@ -153,6 +166,9 @@ const styles = StyleSheet.create({
     marginTop: 20,
     fontSize: 16,
     color: "#666",
+  },
+  quantityCount: {
+    textAlign: "center",
   },
 });
 
