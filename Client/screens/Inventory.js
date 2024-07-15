@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
 import {
+  ActivityIndicator,
   View,
   Text,
   Image,
   FlatList,
   StyleSheet,
-  ActivityIndicator,
   Button,
 } from "react-native";
 import BASE_URL from "../config";
@@ -73,6 +73,11 @@ const Inventory = () => {
 
   return (
     <View style={styles.container}>
+      {/* <ActivityIndicator
+        testID="loading-indicator"
+        size="large"
+        color="#6AB7E2"
+      /> */}
       <View style={styles.headerTop}>
         <Text style={styles.headerTopText}>Inventory</Text>
       </View>
