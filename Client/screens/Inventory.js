@@ -66,18 +66,17 @@ const Inventory = () => {
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#6AB7E2" />
+        <ActivityIndicator
+          testID="loading-indicator"
+          size="large"
+          color="#6AB7E2"
+        />
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      {/* <ActivityIndicator
-        testID="loading-indicator"
-        size="large"
-        color="#6AB7E2"
-      /> */}
       <View style={styles.headerTop}>
         <Text style={styles.headerTopText}>Inventory</Text>
       </View>

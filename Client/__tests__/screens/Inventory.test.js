@@ -1,5 +1,5 @@
 import React from "react";
-import { render, waitFor, act } from "@testing-library/react-native";
+import { render, waitFor } from "@testing-library/react-native";
 import Inventory from "../../screens/Inventory";
 import BASE_URL from "../../config";
 
