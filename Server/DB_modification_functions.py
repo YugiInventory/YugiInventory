@@ -1,10 +1,16 @@
-
+import boto3
 
 
 #Create 
 
 from config import db
 from models import ReleaseSet, Card, CardinSet
+from seed import upload_images
+
+session = boto3.Session(profile_name='shamsk')
+s3 = session.client('s3')
+
+
 
 def createDBReleaseSet(release_set): #releaseSet is the API object
     try:
@@ -29,6 +35,9 @@ def createDBCard(card): #card is the card_obj from the API
     #try to create the card
     
     #s3 upload function
+    img_url = card['card_images'][0]['image_url_small']
+
+    s3_url = upload_images(img_url,card['id'])
 
     try:
         url = 'temp' #whatever the s3 function returns
@@ -74,7 +83,6 @@ def createDBCardinSet(release_set_id, card_id, set_name,card_obj):
 
     for singleRelease in card_obj['card_sets']:
         if singleRelease['set_name'] == set_name:
-            print('we made it ')
             try: 
                 new_release = CardinSet(
                     card_id = card_id,

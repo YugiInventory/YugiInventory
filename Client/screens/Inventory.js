@@ -1,6 +1,8 @@
 import React from "react";
-import { FlatList, StyleSheet, Text, View } from "react-native";
+import { Button, FlatList, StyleSheet, Text, TextInput, View } from "react-native";
 import BASE_URL from "../index";
+import {login} from '../services/AuthFunctions'
+
 
 const data = [
   { id: 1, name: "Blackwing Shura", atk: "1800", def: "1200", quantity: 0 },
@@ -57,6 +59,15 @@ const Inventory = () => {
         }}
         renderItem={renderItem}
       />
+      <View>
+        <TextInput 
+        placeholder="Username"
+        />
+        <TextInput
+        placeholder="password"
+        />
+        <Button title="Login"/>
+      </View>
     </View>
   );
 };
