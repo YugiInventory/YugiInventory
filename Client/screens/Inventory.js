@@ -9,11 +9,12 @@ import {
   Button,
 } from "react-native";
 import BASE_URL from "../config";
+import { cardSearch } from "../utility";
 
 const Inventory = () => {
   const [allCards, setAllCards] = useState({ cards: [] });
   const [isLoading, setIsLoading] = useState(true);
-
+  const [card, setCard] = useState([]);
   // Create Search Bar
   // Create function searching by card name or ID (handle in request??)
   // Update state with user input
@@ -35,6 +36,8 @@ const Inventory = () => {
 
     fetchCards();
   }, []);
+
+  console.log(cardSearch("stardust dragon"));
 
   const QuantityModal = () => {
     return (

@@ -6,7 +6,11 @@ const storeAccessToken = async (accessToken) => {
 
 export const cardSearch = async (params) => {
   try {
-    const response = await fetch(`${BASE_URL}/cards?${params}`);
+    const response =
+      typeof params === "string"
+        ? await fetch(`${BASE_URL}/cards?name=${params}`)
+        : await fetch(`${BASE_URL}/card/${params}`);
+
     const data = response.json();
   } catch (error) {
     console.error("Could not retrieve card info:", error);
