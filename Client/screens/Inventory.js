@@ -14,6 +14,11 @@ const Inventory = () => {
   const [allCards, setAllCards] = useState({ cards: [] });
   const [isLoading, setIsLoading] = useState(true);
 
+  // Create Search Bar
+  // Create function searching by card name or ID (handle in request??)
+  // Update state with user input
+  // Use state to update search params
+
   useEffect(() => {
     const fetchCards = async () => {
       try {
