@@ -1,6 +1,6 @@
 import { Button, Text, TextInput, StyleSheet, View } from "react-native";
 import { useState } from "react";
-import BASE_URL from "../index";
+import BASE_URL from "../config";
 
 const CardInfo = () => {
   const randomCard = async () => {

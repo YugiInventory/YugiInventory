@@ -1,6 +1,6 @@
 import React from "react";
 import { FlatList, StyleSheet, Text, View } from "react-native";
-import BASE_URL from "../index";
+import BASE_URL from "../config";
 
 const data = [
   { id: 1, name: "Blackwing Shura", atk: "1800", def: "1200", quantity: 0 },

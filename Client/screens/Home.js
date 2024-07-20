@@ -2,7 +2,6 @@ import { Button, Text, TextInput, StyleSheet, View } from "react-native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import Profile from "./Profile";
-import Settings from "./Settings";
 import Inventory from "./Inventory";
 import Decks from "./Decks";
 
