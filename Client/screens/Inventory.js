@@ -23,7 +23,7 @@ const Inventory = () => {
   useEffect(() => {
     const fetchCards = async () => {
       try {
-        const response = await fetch(`${BASE_URL}/cards`);
+        const response = await fetch(`${BASE_URL}/cards?name=st&page=4`);
         const data = await response.json();
         // console.log(data);
         setAllCards(data);
@@ -36,8 +36,6 @@ const Inventory = () => {
 
     fetchCards();
   }, []);
-
-  console.log(cardSearch("stardust dragon"));
 
   const QuantityModal = () => {
     return (
