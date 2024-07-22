@@ -6,10 +6,7 @@ const storeAccessToken = async (accessToken) => {
 
 export const cardSearch = async (params) => {
   try {
-    const response =
-      typeof params === "string"
-        ? await fetch(`${BASE_URL}/cards?name=${params}`)
-        : await fetch(`${BASE_URL}/card/${params}`);
+    const response = await fetch(`${BASE_URL}/cards?name=${params}`);
     const data = response.json();
     return data;
   } catch (error) {
