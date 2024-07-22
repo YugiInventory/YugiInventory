@@ -7,6 +7,7 @@ import {
   FlatList,
   StyleSheet,
   Button,
+  TextInput,
 } from "react-native";
 import BASE_URL from "../config";
 import { cardSearch } from "../utility";
@@ -14,7 +15,7 @@ import { cardSearch } from "../utility";
 const Inventory = () => {
   const [allCards, setAllCards] = useState({ cards: [] });
   const [isLoading, setIsLoading] = useState(true);
-  const [card, setCard] = useState([]);
+  const [card, setCard] = useState("");
   // Create Search Bar
   // Create function searching by card name or ID (handle in request??)
   // Update state with user input
@@ -23,7 +24,7 @@ const Inventory = () => {
   useEffect(() => {
     const fetchCards = async () => {
       try {
-        const response = await fetch(`${BASE_URL}/cards?name=st&page=4`);
+        const response = await fetch(`${BASE_URL}/cards`);
         const data = await response.json();
         // console.log(data);
         setAllCards(data);
@@ -36,6 +37,26 @@ const Inventory = () => {
 
     fetchCards();
   }, []);
+
+  const changeText = (e) => {
+    console.log(e);
+    setCard(e);
+  };
+
+  const handleSearch = async () => {
+    if (card.length === 0) {
+      console.log("please enter a valid value");
+      return null;
+    }
+    const data = await cardSearch(card);
+    if (data === null) {
+      console.log("No Cards Found!");
+    } else {
+      console.log(data);
+    }
+    setCard("");
+    console.log(card);
+  };
 
   const QuantityModal = () => {
     return (
@@ -88,6 +109,12 @@ const Inventory = () => {
       </View>
       <View style={styles.header}>
         <Text style={styles.heading}>Find a Card</Text>
+        <TextInput
+          value={card}
+          onChangeText={changeText}
+          placeholder="Find a card"
+        />
+        <Button title="Search" onPress={handleSearch} />
       </View>
       <FlatList
         data={allCards.cards}

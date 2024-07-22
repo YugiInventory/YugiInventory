@@ -10,8 +10,8 @@ export const cardSearch = async (params) => {
       typeof params === "string"
         ? await fetch(`${BASE_URL}/cards?name=${params}`)
         : await fetch(`${BASE_URL}/card/${params}`);
-
     const data = response.json();
+    return data;
   } catch (error) {
     console.error("Could not retrieve card info:", error);
   }
