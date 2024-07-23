@@ -16,6 +16,8 @@ const Inventory = () => {
   const [allCards, setAllCards] = useState({ cards: [] });
   const [isLoading, setIsLoading] = useState(true);
   const [card, setCard] = useState("");
+  // Search bar results
+  const [searchData, setSearchData] = useState([]);
   // Create Search Bar
   // Create function searching by card name or ID (handle in request??)
   // Update state with user input
@@ -39,7 +41,7 @@ const Inventory = () => {
   }, []);
 
   const changeText = (e) => {
-    console.log(e);
+    // console.log(e);
     setCard(e);
   };
 
@@ -52,10 +54,10 @@ const Inventory = () => {
     if (data === null) {
       console.log("No Cards Found!");
     } else {
-      console.log(data);
+      // console.log(data.cards);
+      setSearchData(data.cards);
     }
     setCard("");
-    console.log(card);
   };
 
   const QuantityModal = () => {
@@ -117,7 +119,10 @@ const Inventory = () => {
         <Button title="Search" onPress={handleSearch} />
       </View>
       <FlatList
+        // All cards in pool
         data={allCards.cards}
+        // Results of using search
+        // data={searchData}
         keyExtractor={(item) => item.id.toString()}
         renderItem={renderItem}
         showsVerticalScrollIndicator={false}
