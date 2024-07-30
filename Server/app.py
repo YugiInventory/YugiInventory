@@ -17,7 +17,7 @@ from models import *
 from config import app, db
 from models import User, Card, Deck, CardinSet, Banlist, BanlistCard , RefreshToken
 
-from utils.jwtutils import issue_jwt_token
+from utils.jwtutils import issue_jwt_token , token_required
 
 ###Helper Functions####
 def server_error_response():

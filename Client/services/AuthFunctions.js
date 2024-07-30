@@ -12,7 +12,17 @@ const storeTokens = async (accessToken, refreshToken) => {
         console.error('Error Storing tokens',e)
     }
 
-    await SecureStore.getItemAsync('accessToken').then(result => console.log(result))
+    // console.log('zzzz')
+    // let result = await SecureStore.getItemAsync('accessToken');
+    // if (result) {
+    //     console.log(`Access_Token is ${result}`)
+    // }
+
+    // let refresht = await SecureStore.getItemAsync('refreshToken');
+    // if (refresht) {
+    //     console.log(`Refresh_Token is ${refresht}`)
+    // }
+    // console.log('post zzzz')
 };
 
 const clearTokens = async () => {
@@ -25,12 +35,11 @@ const clearTokens = async () => {
     }
 }
 
-const login = async (username, password, rmrFlag) => {
+const login_init = async (username, password) => {
 
     console.log(JSON.stringify({username,password}))
     console.log(BASE_URL)
     try { 
-        // `${BASE_URL}/Login`
         const response = await fetch(`${BASE_URL_}/Login` , {
             method: 'POST',
             headers: {
@@ -39,22 +48,14 @@ const login = async (username, password, rmrFlag) => {
             body: JSON.stringify({username, password}),
         });
     
-        console.log(response.text)   
+        if (!response.ok) {
+            console.log('Login Failed')
+            throw new Error('Login failed');
+        }
 
-    if (!response.ok) {
-        console.log('Error?')
-        throw new Error('Login failed');
-    }
-
-    const data = await response.json();
-    const {accessToken, refreshToken} = data;
-    
-    if (rmrFlag) {
+        const data = await response.json();
+        const {accessToken, refreshToken} = data;
         await storeTokens(accessToken, refreshToken)
-    } 
-    else {
-        await SecureStore.setItemAsync('accessToken', accessToken)
-    } return data;
     }
 
     catch(e){
@@ -65,7 +66,27 @@ const login = async (username, password, rmrFlag) => {
 
 const logout = async () => {
     await clearTokens();
+
+    console.log('zzzz')
+    let result = await SecureStore.getItemAsync('accessToken');
+    if (result) {
+        console.log(`Access_Token is ${result}`)
+    }
+    else{
+        console.log('Access token_cleared')
+    }
+
+    let refresht = await SecureStore.getItemAsync('refreshToken');
+    if (refresht) {
+        console.log(`Refresh_Token is ${refresht}`)
+    }
+    else{
+        console.log('refresh token cleared')
+    }
+    console.log('post zzzz')
+
+    //Send request to server to delete refresh token as well
 }
 
 
-export {login, logout, clearTokens, storeTokens}
+export {login_init, logout, clearTokens, storeTokens}

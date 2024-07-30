@@ -4,7 +4,7 @@ import { Text, TextInput, StyleSheet, View, Button } from "react-native";
 import BASE_URL from "../index";
 import { useForm, Controller } from "react-hook-form";
 import CardInfo from "./CardInfo";
-import {storeTokens, clearTokens, login} from '../services/AuthFunctions'
+import {storeTokens, clearTokens, login_init, getUserId} from '../services/AuthFunctions'
 import Inventory from "./Inventory";
 
 
@@ -18,7 +18,7 @@ const Login = () => {
   const [createEmail, setcreateEmail] = useState('');
 
   const BASE_URL_ = "http://ec2-3-135-192-227.us-east-2.compute.amazonaws.com:8000/";
-  const BASE_URL = "http://127.0.0.1:5555/"
+  const BASE_URL = "http://172.22.221.160:5555/"
 
 
 
@@ -26,47 +26,75 @@ const Login = () => {
     //Login Have the user submit the login credentials. 
     //Get a return back from the server and if it is good then we will also have a refreshToken and an accessToken
     //Store these values in securestore.
-
     console.log('Username:',username);
     console.log('Password:',password)
-    
-
-    login(username,password)
-
-    console.log('haha');
+    login_init(username,password)
+}
   
-    storeTokens('f','f');
-  
-    console.log('we made it')
-  }
-  
-  const handleLogout = () => {
+  const handleLogout = async () => {
     console.log('logout');
-    clearTokens()
+
+    //Get the user_id
+
+    try {
+      const userid = await getUserId();
+      if(!userid) {
+        console.log('No id found in token')
+        throw new Error('Token has issue')
+      }
+      const response = await fetch(`${BASE_URL_}/Logout`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify( {user_id: userid})
+      })
+      if (!response.ok){
+        console.log('Logout failed')
+        throw new Error('Logout failed');
+      }
+      await clearTokens();
+      return true
+    }
+    catch(e) {
+      console.log('Error logging out', e)
+    }
   }
 
   const handleCreateAccount = async () =>{
     console.log(createusername);
     console.log(createpassword);
-    console.log(createEmail)
+    console.log(createEmail);
+    console.log(BASE_URL);
 
     //Send post request with the informatin
 
+    const data = {
+      username: createusername,
+      password: createpassword,
+      email: createEmail
+    }
+
+
     try {
-      const response = await fetch(`${BASE_URL_}/cards`);
+      const response = await fetch(`${BASE_URL_}/user` , {
+        method: 'POST',
+        headers: {
+          'Content-Type' : 'application/json',
+        },
+        body: JSON.stringify(data)
+      });
+
       if (!response.ok){
         throw new Error('???')
       }
-      
-      const json_out = await response.json();
-      console.log(json_out);
-
+      else{
+        console.log('succ')
+      }
     }
     catch (e){
       console.log(e.message)
     }
-
-
   }
 
 
