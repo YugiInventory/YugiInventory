@@ -1,6 +1,7 @@
 import * as SecureStore from 'expo-secure-store'
 
-BASE_URL = "http://ec2-3-135-192-227.us-east-2.compute.amazonaws.com:8000/";
+const BASE_URL_ = "http://ec2-3-135-192-227.us-east-2.compute.amazonaws.com:8000/";
+const BASE_URL = "http://127.0.0.1:5555/"
 
 const storeTokens = async (accessToken, refreshToken) => {
     try {
@@ -10,6 +11,8 @@ const storeTokens = async (accessToken, refreshToken) => {
     catch(e){
         console.error('Error Storing tokens',e)
     }
+
+    await SecureStore.getItemAsync('accessToken').then(result => console.log(result))
 };
 
 const clearTokens = async () => {
@@ -23,15 +26,23 @@ const clearTokens = async () => {
 }
 
 const login = async (username, password, rmrFlag) => {
-    try {
-        const response = await fetch(`${BASE_URL}/Login` , {
+
+    console.log(JSON.stringify({username,password}))
+    console.log(BASE_URL)
+    try { 
+        // `${BASE_URL}/Login`
+        const response = await fetch(`${BASE_URL_}/Login` , {
             method: 'POST',
             headers: {
                 'Content-Type':'application/json',
             },
             body: JSON.stringify({username, password}),
         });
+    
+        console.log(response.text)   
+
     if (!response.ok) {
+        console.log('Error?')
         throw new Error('Login failed');
     }
 
@@ -45,6 +56,7 @@ const login = async (username, password, rmrFlag) => {
         await SecureStore.setItemAsync('accessToken', accessToken)
     } return data;
     }
+
     catch(e){
         console.log('Error Logging in', e);
         throw e;

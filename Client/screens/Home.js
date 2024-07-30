@@ -5,6 +5,7 @@ import Profile from "./Profile";
 // import Settings from "./Settings";
 import Inventory from "./Inventory";
 import Decks from "./Decks";
+import Login from "./Login";
 
 const Tab = createBottomTabNavigator();
 
@@ -14,6 +15,9 @@ const Home = () => {
       <Tab.Screen style={styles.container} name="Profile" component={Profile} />
       <Tab.Screen name="Decks" component={Decks} />
       <Tab.Screen name="Inventory" component={Inventory} />
+      <Tab.Screen name="Login" component={Login} />
+
+
     </Tab.Navigator>
   );
 };

@@ -17,6 +17,8 @@ from models import *
 from config import app, db
 from models import User, Card, Deck, CardinSet, Banlist, BanlistCard , RefreshToken
 
+from utils.jwtutils import issue_jwt_token
+
 ###Helper Functions####
 def server_error_response():
     return jsonify({'Error': 'Server Error'}),500
@@ -33,46 +35,6 @@ def bad_request_response():
 
 def paginate(query,page, per_page):
     return query.paginate(page=page,per_page=per_page) #these all have to be deinfed with keyword only?
-
-
-def issue_jwt_token(username,user_id):
-    token = jwt.encode({'username':username,'user_id':user_id,'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=15)},app.config['SECRET_KEY'])            
-    
-    # token = jwt.encode({'username':user.username,'user_id':user.id,'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=1)},app.config['SECRET_KEY'])            
-    # print(token)
-    # print('test decode')
-    # print(jwt.decode(token, app.config['SECRET_KEY'], algorithms="HS256"))
-
-    return token
-
-def issue_refresh_token(user_id,prev_refresh_token_obj=None):
-    new_uuid = uuid.uuid4()
-    expiration_time = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=60)
-
-    if prev_refresh_token_obj:
-        prev_refresh_token_obj.token = new_uuid
-        prev_refresh_token_obj.expiration_time = expiration_time
-        refresh_token = prev_refresh_token_obj
-    else:
-        refresh_token = RefreshToken(
-            token = new_uuid,
-            user_id = user_id,
-            expiration_time = expiration_time
-        )  
-    return refresh_token
-
-    # new_uuid = uuid.uuid4()
-    # expiration_time = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=60)
-
-    # if prev_refresh_token:
-    #     prev_refresh_token.token = new_uuid
-    #     prev_refresh_token.expiration_time = expiration_time
-    # else:
-    #     prev_refresh_token = RefreshToken(
-    #         token = new_uuid,
-    #         user_id = user.id,
-    #         expiration_time = expiration_time
-    #     )
 
 def invalidate_jwt_token(): #15 minute windows can make this somewhat unnecessary. 
     #scenarios where this would be needed. token payload information changes, users credential changes (password/username change)
@@ -401,9 +363,6 @@ def modify_Card_in_Inventory():
 #Create a Deck
 #Get a Deck
 
-
-
-
 @app.route('/deck' , methods = ['POST' , 'PATCH' , 'DELETE'])
 def deck():
 
@@ -601,26 +560,45 @@ def ReconDecks(userid):
     return response
 
 @app.route('/Login', methods = ['POST'])
-def Login():
+def Login():    
 
     user_info = request.get_json()     
+    
     user = User.query.filter(User.username == user_info['username']).first()
-    prev_refresh_token_obj = RefreshToken.query.filter(RefreshToken.user_id == user.id).first()
-    print(user)
+
+    if 'refreshToken' in user_info:
+        #Check if refreshToken is Valid
+        #If Valid return an access Token
+        issue_jwt_token()
+        pass
+
     if user:
         pass_match = user.authenticate(user_info['password'])
         if pass_match:
             #create JWT and refresh token
-            token = issue_jwt_token(user.username,user.id)            
-            refresh_token = issue_refresh_token(user.id,prev_refresh_token_obj)
+            #token = issue_jwt_token(user.username,user.id)            
+            # refresh_token = issue_refresh_token(user.id)
             
+            token = issue_jwt_token(user.username, user.id)
+            refresh_token = RefreshToken.issue_refresh_token(user.id)
+
+            #If we have a refresh token we need to just update that param
+
+            has_refresh = RefreshToken.query.filter(RefreshToken.user_id == user.id).first()
+
+            if has_refresh:
+                has_refresh.token, has_refresh.expiration_time = refresh_token.token, refresh_token.expiration_time
+                db.session.add(has_refresh)
+            else:
+                db.session.add(refresh_token)
             
-            db.session.add(refresh_token)
             db.session.commit()
             
-
+            user_dict = user.to_dict()
+            user_dict['accessToken'] = token
+            user_dict['refreshToken'] = refresh_token.token
             response = make_response( 
-                jsonify(user.to_dict(), token,refresh_token.token), 201
+                jsonify(user_dict), 201
             )
         else:
            response = make_response({},401)

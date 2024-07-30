@@ -5,7 +5,7 @@ const Profile = () => {
   return (
     <View>
       <Text style={styles.container}>Profile</Text>
-      <Button>Logout</Button>
+      <Button title="Logout"/>
     </View>
   );
 };

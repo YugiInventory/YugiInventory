@@ -14,9 +14,7 @@ const CardInfo = () => {
   };
   return (
     <View>
-      <Button title="Get Information" onPress={() => randomCard(123)}>
-        Get Information
-      </Button>
+      <Button title="Get Information" onPress={() => randomCard(123)}/>
     </View>
   );
 };
