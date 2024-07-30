@@ -1,46 +1,108 @@
-import React from "react";
-import { FlatList, StyleSheet, Text, View } from "react-native";
+import React, { useState, useEffect } from "react";
+import {
+  ActivityIndicator,
+  View,
+  Text,
+  Image,
+  FlatList,
+  StyleSheet,
+  Button,
+  TextInput,
+} from "react-native";
 import BASE_URL from "../config";
+import { cardSearch } from "../utility";
 
-const data = [
-  { id: 1, name: "Blackwing Shura", atk: "1800", def: "1200", quantity: 0 },
-  { id: 2, name: "Blackwing Gale", atk: "1300", def: "400", quantity: 0 },
-  { id: 3, name: "Blackwing Bora", atk: "1700", def: "800", quantity: 0 },
-  { id: 4, name: "Blackwing Sirocco", atk: "2000", def: "900", quantity: 0 },
-  { id: 5, name: "Blackwing Vayu", atk: "800", def: "0", quantity: 0 },
-  { id: 6, name: "Blackwing Kalut", atk: "1400", def: "1000", quantity: 0 },
-  { id: 7, name: "Blackwing Zephyros", atk: "1600", def: "400", quantity: 0 },
-  {
-    id: 8,
-    name: "Blackwing Armor Master",
-    atk: "2500",
-    def: "1600",
-    quantity: 0,
-  },
-  {
-    id: 9,
-    name: "Blackwing Armed Wing",
-    atk: "2300",
-    def: "1000",
-    quantity: 0,
-  },
-  {
-    id: 10,
-    name: "Blackwing Silverwind",
-    atk: "2800",
-    def: "2300",
-    quantity: 0,
-  },
-];
 const Inventory = () => {
+  const [allCards, setAllCards] = useState({ cards: [] });
+  const [isLoading, setIsLoading] = useState(true);
+  const [card, setCard] = useState("");
+  // Search bar results
+  const [searchData, setSearchData] = useState([]);
+  // Create Search Bar
+  // Create function searching by card name or ID (handle in request??)
+  // Update state with user input
+  // Use state to update search params
+
+  useEffect(() => {
+    const fetchCards = async () => {
+      try {
+        const response = await fetch(`${BASE_URL}/cards`);
+        const data = await response.json();
+        // console.log(data);
+        setAllCards(data);
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Error fetching cards:", error);
+        setIsLoading(false);
+      }
+    };
+
+    fetchCards();
+  }, []);
+
+  const changeText = (e) => {
+    // console.log(e);
+    setCard(e);
+  };
+
+  const handleSearch = async () => {
+    if (card.length === 0) {
+      console.log("please enter a valid value");
+      return null;
+    }
+    const data = await cardSearch(card);
+    if (data === null) {
+      console.log("No Cards Found!");
+    } else {
+      // console.log(data.cards);
+      setSearchData(data.cards);
+    }
+    setCard("");
+  };
+
+  const QuantityModal = () => {
+    return (
+      <View>
+        <Button title="+" />
+        <Text style={styles.quantityCount}>0</Text>
+        <Button title="-" />
+      </View>
+    );
+  };
   const renderItem = ({ item }) => (
     <View style={styles.row}>
-      <Text style={styles.cell}>{item.name}</Text>
-      <Text style={styles.cell}>{item.atk}</Text>
-      <Text style={styles.cell}>{item.def}</Text>
-      <Text style={styles.cell}>{item.quantity}</Text>
+      <Image source={{ uri: item.card_image }} style={styles.cardImage} />
+      <View style={styles.cardInfo}>
+        <Text style={styles.cellName}>{item.name}</Text>
+        <Text style={styles.cell}>
+          {item.card_race} {item.card_type}
+        </Text>
+        {item.card_type === "Monster" && (
+          <View style={styles.statsContainer}>
+            <Text style={styles.cell}>
+              ATK: {item.attack} DEF: {item.defense}
+            </Text>
+          </View>
+        )}
+        <Text style={styles.cellDescription} numberOfLines={2}>
+          {item.description}
+        </Text>
+      </View>
+      <QuantityModal />
     </View>
   );
+
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator
+          testID="loading-indicator"
+          size="large"
+          color="#6AB7E2"
+        />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -49,22 +111,39 @@ const Inventory = () => {
       </View>
       <View style={styles.header}>
         <Text style={styles.heading}>Find a Card</Text>
+        <TextInput
+          value={card}
+          onChangeText={changeText}
+          placeholder="Find a card"
+        />
+        <Button title="Search" onPress={handleSearch} />
       </View>
       <FlatList
-        data={data}
-        keyExtractor={(item) => {
-          item.id.toString();
-        }}
+        // All cards in pool
+        data={allCards.cards}
+        // Results of using search
+        // data={searchData}
+        keyExtractor={(item) => item.id.toString()}
         renderItem={renderItem}
+        showsVerticalScrollIndicator={false}
+        ListEmptyComponent={
+          <Text style={styles.emptyText}>No cards found</Text>
+        }
       />
     </View>
   );
 };
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingVertical: 30,
     paddingHorizontal: 30,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
   headerTop: {
     backgroundColor: "#6AB7E2",
@@ -89,7 +168,6 @@ const styles = StyleSheet.create({
   },
   row: {
     flexDirection: "row",
-    justifyContent: "space-between",
     marginVertical: 8,
     marginHorizontal: 2,
     elevation: 1,
@@ -98,10 +176,41 @@ const styles = StyleSheet.create({
     padding: 10,
     backgroundColor: "#fff",
   },
-  cell: {
-    fontSize: 15,
-    textAlign: "left",
+  cardImage: {
+    width: 60,
+    height: 90,
+    marginRight: 10,
+  },
+  cardInfo: {
     flex: 1,
+  },
+  cell: {
+    fontSize: 14,
+    marginBottom: 2,
+  },
+  cellName: {
+    fontWeight: "bold",
+    fontSize: 16,
+    marginBottom: 5,
+  },
+  cellDescription: {
+    fontSize: 12,
+    color: "#666",
+    marginTop: 5,
+  },
+  statsContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 5,
+  },
+  emptyText: {
+    textAlign: "center",
+    marginTop: 20,
+    fontSize: 16,
+    color: "#666",
+  },
+  quantityCount: {
+    textAlign: "center",
   },
 });
 
