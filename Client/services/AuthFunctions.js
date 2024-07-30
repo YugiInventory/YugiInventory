@@ -1,4 +1,5 @@
 import * as SecureStore from "expo-secure-store";
+import jwtDecode from "jwt-decode";
 
 const BASE_URL_ =
   "http://ec2-3-135-192-227.us-east-2.compute.amazonaws.com:8000/";
@@ -82,4 +83,18 @@ const logout = async () => {
   //Send request to server to delete refresh token as well
 };
 
-export { loginInit, logout, clearTokens, storeTokens };
+const getUserId = async () => {
+  try {
+    const accessToken = await SecureStore.getItemAsync("accessToken");
+    if (accessToken) {
+      const decoded = jwtDecode(accessToken);
+      return decoded.user_id;
+    }
+    return null;
+  } catch (e) {
+    console.log("Error decoding token", e);
+    return null;
+  }
+};
+
+export { loginInit, logout, clearTokens, storeTokens, getUserId };

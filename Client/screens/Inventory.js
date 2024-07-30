@@ -131,11 +131,6 @@ const Inventory = () => {
           <Text style={styles.emptyText}>No cards found</Text>
         }
       />
-      <View>
-        <TextInput placeholder="Username" />
-        <TextInput placeholder="password" />
-        <Button title="Login" />
-      </View>
     </View>
   );
 };
