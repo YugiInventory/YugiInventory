@@ -619,6 +619,15 @@ def logout():
         return response
     return make_response({},401)
 
+@app.route('/TestAuth', methods=['GET'])
+@token_required
+def user_invent(user_id):
+    card_info = Inventory.query.filter(Inventory.user_id==user_id).first()
+    print('???')
+
+    response = make_response(jsonify(card_info)),201
+    return response
+
 if __name__ == '__main__':
 
     app.run(port=5555, debug=True)
