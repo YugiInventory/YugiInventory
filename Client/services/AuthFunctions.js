@@ -34,7 +34,7 @@ const clearTokens = async () => {
   }
 };
 
-const login_init = async (username, password) => {
+const loginInit = async (username, password) => {
   console.log(JSON.stringify({ username, password }));
   console.log(BASE_URL);
   try {
@@ -82,4 +82,4 @@ const logout = async () => {
   //Send request to server to delete refresh token as well
 };
 
-export { login_init, logout, clearTokens, storeTokens };
+export { loginInit, logout, clearTokens, storeTokens };

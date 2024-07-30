@@ -7,7 +7,7 @@ import CardInfo from "./CardInfo";
 import {
   storeTokens,
   clearTokens,
-  login_init,
+  loginInit,
   getUserId,
 } from "../services/AuthFunctions";
 import Inventory from "./Inventory";
@@ -30,7 +30,7 @@ const Login = () => {
     //Store these values in securestore.
     console.log("Username:", username);
     console.log("Password:", password);
-    login_init(username, password);
+    loginInit(username, password);
   };
 
   const handleLogout = async () => {
