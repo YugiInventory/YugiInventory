@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import BASE_URL from "../config";
 import { cardSearch } from "../utility";
+import { login } from "../services/AuthFunctions";
 
 const Inventory = () => {
   const [allCards, setAllCards] = useState({ cards: [] });
@@ -130,6 +131,11 @@ const Inventory = () => {
           <Text style={styles.emptyText}>No cards found</Text>
         }
       />
+      <View>
+        <TextInput placeholder="Username" />
+        <TextInput placeholder="password" />
+        <Button title="Login" />
+      </View>
     </View>
   );
 };

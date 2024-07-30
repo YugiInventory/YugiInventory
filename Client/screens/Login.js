@@ -1,99 +1,126 @@
-import React from "react";
+import React, { useState } from "react";
+import * as SecureStore from "expo-secure-store";
 import { Text, TextInput, StyleSheet, View, Button } from "react-native";
 import BASE_URL from "../config";
 import { useForm, Controller } from "react-hook-form";
 import CardInfo from "./CardInfo";
+import {
+  storeTokens,
+  clearTokens,
+  login_init,
+  getUserId,
+} from "../services/AuthFunctions";
+import Inventory from "./Inventory";
 
-const Login = ({ navigation }) => {
-  const {
-    control,
-    handleSubmit,
-    formState: { errors },
-  } = useForm({
-    defaultValues: {
-      username: "",
-      password: "",
-    },
-  });
-  const onSubmit = async (data) => {
-    const userLogin = await fetch(`${BASE_URL}/Login`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        username: data.username,
-        password: data.password,
-      }),
-    }).then((response) => {
-      const res = response.json();
-      console.log(res);
-      if (res.status === 201) {
-        // const userInfo = {}
-        console.log("Success");
-        navigation.navigate("Home");
-      } else {
-        console.log("Unsuccessful");
-        console.log(res.status);
-      }
-    });
+const Login = () => {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+
+  const [createusername, setcreateusername] = useState("");
+  const [createpassword, setcreatepassword] = useState("");
+  const [createEmail, setcreateEmail] = useState("");
+
+  const BASE_URL_ =
+    "http://ec2-3-135-192-227.us-east-2.compute.amazonaws.com:8000/";
+  const BASE_URL = "http://172.22.221.160:5555/";
+
+  const handleLogin = () => {
+    //Login Have the user submit the login credentials.
+    //Get a return back from the server and if it is good then we will also have a refreshToken and an accessToken
+    //Store these values in securestore.
+    console.log("Username:", username);
+    console.log("Password:", password);
+    login_init(username, password);
   };
 
-  // const handleLogin = () => {
-  //   navigation.navigate("Home");
-  // };
+  const handleLogout = async () => {
+    console.log("logout");
 
-  const handleCreateUserScreen = () => {
-    navigation.navigate("CreateUser");
+    //Get the user_id
+
+    try {
+      const userid = await getUserId();
+      if (!userid) {
+        console.log("No id found in token");
+        throw new Error("Token has issue");
+      }
+      const response = await fetch(`${BASE_URL_}/Logout`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ user_id: userid }),
+      });
+      if (!response.ok) {
+        console.log("Logout failed");
+        throw new Error("Logout failed");
+      }
+      await clearTokens();
+      return true;
+    } catch (e) {
+      console.log("Error logging out", e);
+    }
+  };
+
+  const handleCreateAccount = async () => {
+    console.log(createusername);
+    console.log(createpassword);
+    console.log(createEmail);
+    console.log(BASE_URL);
+
+    //Send post request with the informatin
+
+    const data = {
+      username: createusername,
+      password: createpassword,
+      email: createEmail,
+    };
+
+    try {
+      const response = await fetch(`${BASE_URL_}/user`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        throw new Error("???");
+      } else {
+        console.log("succ");
+      }
+    } catch (e) {
+      console.log(e.message);
+    }
   };
 
   return (
     <View>
-      <Controller
-        control={control}
-        rules={{
-          required: true,
-        }}
-        render={({ field: { onChange, onBlur, value } }) => (
-          <TextInput
-            placeholder="Username"
-            onBlur={onBlur}
-            onChangeText={onChange}
-            value={value}
-          />
-        )}
-        name="username"
+      <TextInput placeholder="username" onChangeText={setUsername} />
+      <TextInput
+        secureTextEntry={true}
+        placeholder="password"
+        onChangeText={setPassword}
       />
-      {errors.username && <Text>This is required.</Text>}
-
-      <Controller
-        control={control}
-        rules={{
-          required: true,
-        }}
-        render={({ field: { onChange, onBlur, value } }) => (
-          <TextInput
-            placeholder="Password"
-            onBlur={onBlur}
-            onChangeText={onChange}
-            value={value}
-          />
-        )}
-        name="passowrd"
-      />
-      {errors.password && <Text>This is required.</Text>}
-
-      <Button title="Login" onPress={handleSubmit(onSubmit)} />
 
       <View style={styles.buttonSuite}>
-        <Button title="Create User" onPress={handleCreateUserScreen} />
+        <Button title="Login" onPress={handleLogin} />
+        <Button title="Logout" onPress={handleLogout} />
       </View>
-      {/* <Text>Placeholder for Logo</Text>
-      <View style={styles.container}>
-        <TextInput placeholder="Username" />
-        <TextInput placeholder="Password" />
-        <CardInfo />
-      </View> */}
+
+      <View>
+        <TextInput
+          placeholder="Create Username"
+          onChangeText={setcreateusername}
+        />
+        <TextInput
+          placeholder="Create Strong Password"
+          onChangeText={setcreatepassword}
+        />
+        <TextInput placeholder="enter email" onChangeText={setcreateEmail} />
+        <Button title="Create Account" onPress={handleCreateAccount} />
+      </View>
     </View>
   );
 };

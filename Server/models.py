@@ -6,7 +6,8 @@ from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy_serializer import SerializerMixin
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.dialects.postgresql import UUID
-
+import datetime
+import uuid
 
 from config import db, bcrypt
 
@@ -16,9 +17,20 @@ class RefreshToken(db.Model, SerializerMixin):
     token = db.Column(UUID(as_uuid=True))
     expiration_time = db.Column(db.DateTime)
     #FK
-    user_id = db.Column(db.Integer, db.ForeignKey('Users.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('Users.id'), nullable=False, unique=True)
     
     serialize_rules = ('-user_id',)
+
+
+    def is_valid(self):
+        return datetime.utcnow() < self.expiration_time
+
+    @staticmethod
+    def issue_refresh_token(user_id):
+        new_uuid = uuid.uuid4()
+        expiration_time = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=60)
+        refresh_token = RefreshToken(token=new_uuid, user_id=user_id,expiration_time=expiration_time)
+        return refresh_token
 
 
 class User(db.Model, SerializerMixin):
