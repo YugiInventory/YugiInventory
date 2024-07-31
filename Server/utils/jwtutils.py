@@ -34,6 +34,7 @@ def token_required(f):
         
         try:
             print(token)
+            print(app.config['SECRET_KEY'])
             data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
             print(data)
             user_id = data['user_id']
