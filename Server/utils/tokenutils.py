@@ -2,9 +2,10 @@ import jwt
 import datetime
 
 from flask import request , jsonify
-from config import app
+from config import app,db
 from functools import wraps
 
+from models import RefreshToken
 
 def issue_jwt_token(username,user_id):
     token = jwt.encode({'username':username,'user_id':user_id,'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=15)},app.config['SECRET_KEY'])            
@@ -21,6 +22,14 @@ def handle_expired_jwt():
 def validate_jwt():
     pass
 
+def invalidate_refresh_token(user_id):
+    #this would be deleted from the server
+    refreshToken = RefreshToken.query.filter(RefreshToken.user_id == user_id).first()
+    if refreshToken:
+        db.session.delete(refreshToken)
+        db.session.commit()
+        return True
+    return False
 
 def token_required(f):
     @wraps(f)
@@ -33,8 +42,6 @@ def token_required(f):
             return jsonify({'message': 'No Token'}), 401
         
         try:
-            print(token)
-            print(app.config['SECRET_KEY'])
             data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
             print(data)
             user_id = data['user_id']

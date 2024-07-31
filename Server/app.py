@@ -16,8 +16,12 @@ from sqlalchemy.exc import SQLAlchemyError
 from models import *
 from config import app, db
 from models import User, Card, Deck, CardinSet, Banlist, BanlistCard , RefreshToken
+from utils.tokenutils import issue_jwt_token , token_required
 
-from utils.jwtutils import issue_jwt_token , token_required
+from routes.auth_routes import auth_bp
+
+app.register_blueprint(auth_bp, url_prefix = '/auth')
+
 
 ###Helper Functions####
 def server_error_response():
@@ -36,11 +40,7 @@ def bad_request_response():
 def paginate(query,page, per_page):
     return query.paginate(page=page,per_page=per_page) #these all have to be deinfed with keyword only?
 
-def invalidate_jwt_token(): #15 minute windows can make this somewhat unnecessary. 
-    #scenarios where this would be needed. token payload information changes, users credential changes (password/username change)
-    #if the hashed password is included in the jwt, then when a user changes their password it would invalidate the jwt since the signature would change.
 
-    pass
 def invalidate_refresh_token(user_id):
     #this would be deleted from the server
     refreshToken = RefreshToken.query.filter(RefreshToken.user_id == user_id).first()
@@ -559,74 +559,80 @@ def ReconDecks(userid):
     response = make_response(jsonify(recon_array), 200)
     return response
 
-@app.route('/Login', methods = ['POST'])
-def Login():    
+# @app.route('/Login', methods = ['POST'])
+# def Login():    
 
-    user_info = request.get_json()     
+#     user_info = request.get_json()     
     
-    user = User.query.filter(User.username == user_info['username']).first()
+#     user = User.query.filter(User.username == user_info['username']).first()
 
-    if 'refreshToken' in user_info:
-        #Check if refreshToken is Valid
-        #If Valid return an access Token
-        issue_jwt_token()
-        pass
+#     if 'refreshToken' in user_info:
+#         #Check if refreshToken is Valid
+#         #If Valid return an access Token
+#         issue_jwt_token()
+#         pass
 
-    if user:
-        pass_match = user.authenticate(user_info['password'])
-        if pass_match:
-            #create JWT and refresh token
-            #token = issue_jwt_token(user.username,user.id)            
-            # refresh_token = issue_refresh_token(user.id)
+#     if user:
+#         pass_match = user.authenticate(user_info['password'])
+#         if pass_match:
+#             #create JWT and refresh token
+#             #token = issue_jwt_token(user.username,user.id)            
+#             # refresh_token = issue_refresh_token(user.id)
             
-            token = issue_jwt_token(user.username, user.id)
-            refresh_token = RefreshToken.issue_refresh_token(user.id)
+#             token = issue_jwt_token(user.username, user.id)
+#             refresh_token = RefreshToken.issue_refresh_token(user.id)
 
-            #If we have a refresh token we need to just update that param
+#             #If we have a refresh token we need to just update that param
 
-            has_refresh = RefreshToken.query.filter(RefreshToken.user_id == user.id).first()
+#             has_refresh = RefreshToken.query.filter(RefreshToken.user_id == user.id).first()
 
-            if has_refresh:
-                has_refresh.token, has_refresh.expiration_time = refresh_token.token, refresh_token.expiration_time
-                db.session.add(has_refresh)
-            else:
-                db.session.add(refresh_token)
+#             if has_refresh:
+#                 has_refresh.token, has_refresh.expiration_time = refresh_token.token, refresh_token.expiration_time
+#                 db.session.add(has_refresh)
+#             else:
+#                 db.session.add(refresh_token)
             
-            db.session.commit()
+#             db.session.commit()
             
-            user_dict = user.to_dict()
-            user_dict['accessToken'] = token
-            user_dict['refreshToken'] = refresh_token.token
-            response = make_response( 
-                jsonify(user_dict), 201
-            )
-        else:
-           response = make_response({},401)
-    else:
-        response = make_response({},404)
+#             user_dict = user.to_dict()
+#             user_dict['accessToken'] = token
+#             user_dict['refreshToken'] = refresh_token.token
+#             response = make_response( 
+#                 jsonify(user_dict), 201
+#             )
+#         else:
+#            response = make_response({},401)
+#     else:
+#         response = make_response({},404)
     
-    return response
+#     return response
 
-@app.route('/Logout', methods = ["POST"])
-def logout():
-    #Send back the user id, delete that entry from the refreshToken table. 
-    data = request.get_json()
-    #expect the user_id 
+# @app.route('/Logout', methods = ["POST"])
+# def logout():
+#     #Send back the user id, delete that entry from the refreshToken table. 
+#     data = request.get_json()
+#     #expect the user_id 
 
-    isLogOut = invalidate_refresh_token(data['user_id'])
-    if isLogOut:
-        response = make_response({},200)
-        return response
-    return make_response({},401)
+#     isLogOut = invalidate_refresh_token(data['user_id'])
+#     if isLogOut:
+#         response = make_response({},200)
+#         return response
+#     return make_response({},401)
 
-@app.route('/TestAuth', methods=['GET'])
-@token_required
-def user_invent(user_id):
-    card_info = Inventory.query.filter(Inventory.user_id==user_id).first()
-    print('???')
+# @app.route('/Refresh', methods = ["POST"])
+# def refresh_token():
+#     #Send a refresh token to the server, and get out a new access token
+#     pass
 
-    response = make_response(jsonify(card_info)),201
-    return response
+
+# @app.route('/TestAuth', methods=['GET'])
+# @token_required
+# def user_invent(user_id):
+#     card_info = Inventory.query.filter(Inventory.user_id==user_id).first()
+#     print('???')
+
+#     response = make_response(jsonify(card_info)),201
+#     return response
 
 if __name__ == '__main__':
 
