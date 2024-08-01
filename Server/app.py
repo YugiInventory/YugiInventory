@@ -19,9 +19,14 @@ from models import User, Card, Deck, CardinSet, Banlist, BanlistCard , RefreshTo
 from utils.tokenutils import issue_jwt_token , token_required
 
 from routes.auth_routes import auth_bp
+from routes.card_routes import cards_bp
+from routes.set_routes import set_bp
+from routes.user_routes import user_bp
 
 app.register_blueprint(auth_bp, url_prefix = '/auth')
-
+app.register_blueprint(cards_bp, url_prefix = '/cards')
+app.register_blueprint(set_bp, url_prefix = '/sets')
+app.register_blueprint(user_bp, url_prefix='/user')
 
 ###Helper Functions####
 def server_error_response():
@@ -89,153 +94,153 @@ def home2():
     return 'jajaja'
 
 ####################Card Queries####################3333
-@app.route('/cards') #Load all card info. 
-def cards():
+# @app.route('/cards') #Load all card info. 
+# def cards():
 
-    filter_mapping = {
-        'name' : lambda value: Card.name.ilike(f'%{value}%'),
-        'card_type' : lambda value: Card.card_type.ilike(f'%{value}%'), 
-        'card_attribute' : lambda value: Card.card_attribute.ilike(f'%{value}%'),
-        'card_race' : lambda value: Card.card_race.ilike(f'%{value}%')
-        #'id' : lambda value: Card.id==value
-    }
+#     filter_mapping = {
+#         'name' : lambda value: Card.name.ilike(f'%{value}%'),
+#         'card_type' : lambda value: Card.card_type.ilike(f'%{value}%'), 
+#         'card_attribute' : lambda value: Card.card_attribute.ilike(f'%{value}%'),
+#         'card_race' : lambda value: Card.card_race.ilike(f'%{value}%')
+#         #'id' : lambda value: Card.id==value
+#     }
 
-    page = request.args.get('page', default=1, type=int)
-    per_page = request.args.get('per_page',default=20,type=int)
+#     page = request.args.get('page', default=1, type=int)
+#     per_page = request.args.get('per_page',default=20,type=int)
 
-    filters = []
-    try:
-        for key, value in request.args.items():
-            if key in filter_mapping:
-                filter_element = filter_mapping[key](value)
-                filters.append(filter_element)
+#     filters = []
+#     try:
+#         for key, value in request.args.items():
+#             if key in filter_mapping:
+#                 filter_element = filter_mapping[key](value)
+#                 filters.append(filter_element)
 
-        filtered_cards = Card.query.filter(*filters)
-        paginated_results = paginate(filtered_cards,page,per_page)
+#         filtered_cards = Card.query.filter(*filters)
+#         paginated_results = paginate(filtered_cards,page,per_page)
         
-        card_list = [card.to_dict(rules=('-card_in_deck','-card_in_inventory','-card_on_banlist','-releaseSet','-card_in_set')) for card in paginated_results.items]
+#         card_list = [card.to_dict(rules=('-card_in_deck','-card_in_inventory','-card_on_banlist','-releaseSet','-card_in_set')) for card in paginated_results.items]
 
-        response_data = {
-            'cards' : card_list,
-            'page' : page,
-            'per_page' : per_page,
-            'total_pages' : paginated_results.pages,
-            'total_items' : paginated_results.total
-        }
-        response = make_response(jsonify(response_data), 200)        
-    except SQLAlchemyError as se:
-        error_message = f'Error w/ SQLAlchemy {se}'
-        return server_error_response()
-    except Exception as e:
-        error_message = f'Error {e}'
-        print(error_message)
-        return make_response(jsonify({'error': error_message}), 500)
-    return response
+#         response_data = {
+#             'cards' : card_list,
+#             'page' : page,
+#             'per_page' : per_page,
+#             'total_pages' : paginated_results.pages,
+#             'total_items' : paginated_results.total
+#         }
+#         response = make_response(jsonify(response_data), 200)        
+#     except SQLAlchemyError as se:
+#         error_message = f'Error w/ SQLAlchemy {se}'
+#         return server_error_response()
+#     except Exception as e:
+#         error_message = f'Error {e}'
+#         print(error_message)
+#         return make_response(jsonify({'error': error_message}), 500)
+#     return response
 
 
-@app.route('/card/<int:card_id>')
-def card(card_id): #Single Card
-    card_info = Card.query.filter(Card.id==card_id).first()
-    if card_info:
-        response = make_response(jsonify(card_info.to_dict(rules=('-card_in_deck','-card_in_set.card_in_inventory','-card_on_banlist'))),200)
-    else:
-        response = item_not_found_response()
-    return response
+# @app.route('/card/<int:card_id>')
+# def card(card_id): #Single Card
+#     card_info = Card.query.filter(Card.id==card_id).first()
+#     if card_info:
+#         response = make_response(jsonify(card_info.to_dict(rules=('-card_in_deck','-card_in_set.card_in_inventory','-card_on_banlist'))),200)
+#     else:
+#         response = item_not_found_response()
+#     return response
 
 
 ##########SET QUERIES#####################3
 #View all sets
 #Get a single Set by id
 
-@app.route('/sets')
-def sets():
+# @app.route('/sets')
+# def sets():
 
-    filter_mapping = {
-        'name' : lambda value: ReleaseSet.name.ilike(f'%{value}%'),
-        #'releaseDate' : lambda value: .card_type.ilike(f'%{value}%'), 
-        'set_code' : lambda value: Card.card_attribute.ilike(f'%{value}%')
-    }
+#     filter_mapping = {
+#         'name' : lambda value: ReleaseSet.name.ilike(f'%{value}%'),
+#         #'releaseDate' : lambda value: .card_type.ilike(f'%{value}%'), 
+#         'set_code' : lambda value: Card.card_attribute.ilike(f'%{value}%')
+#     }
 
-    set_info = ReleaseSet.query.all()
-    set_list = [pack.to_dict(only=('name','card_count','id','releaseDate','set_code')) for pack in set_info]
-    response = make_response(jsonify(set_list),200)
-    return response
+#     set_info = ReleaseSet.query.all()
+#     set_list = [pack.to_dict(only=('name','card_count','id','releaseDate','set_code')) for pack in set_info]
+#     response = make_response(jsonify(set_list),200)
+#     return response
 
-@app.route('/set/<int:set_id>')
-def set_single(set_id):
-    try:
-        set_info = ReleaseSet.query.filter(ReleaseSet.id==set_id).first()
-        response = make_response(jsonify(set_info.to_dict(rules=('-card_in_set.card.card_in_deck','-card_in_set.card.card_on_banlist','-card_in_set.card_in_inventory','-card_in_set.releaseSet','card_in_set.releaseSet.id'))),200)
-        #card image, id only thing we need from the card section. 
-    except SQLAlchemyError as se:
-        print(se)
-        response = server_error_response()
-    return response
+# @app.route('/set/<int:set_id>')
+# def set_single(set_id):
+#     try:
+#         set_info = ReleaseSet.query.filter(ReleaseSet.id==set_id).first()
+#         response = make_response(jsonify(set_info.to_dict(rules=('-card_in_set.card.card_in_deck','-card_in_set.card.card_on_banlist','-card_in_set.card_in_inventory','-card_in_set.releaseSet','card_in_set.releaseSet.id'))),200)
+#         #card image, id only thing we need from the card section. 
+#     except SQLAlchemyError as se:
+#         print(se)
+#         response = server_error_response()
+#     return response
 
 ##########User Related Queries##############################3
 
 
-@app.route('/user', methods = ['POST','PATCH','DELETE'])
-def user():
-    data = request.get_json()
-    if request.method == 'POST':
-        try:
-            new_user = User(
-                username = data['username'],
-                password_hash = data['password'],
-                email = data['email']
-            )
-            db.session.add(new_user)
-            db.session.commit()
-            response = make_response({},200)
-        except SQLAlchemyError as se:
-            print(se)
-            response = server_error_response()
-        except ValueError as ve:
-            print(ve)
-            response = make_response({'Error':'Failed to Create'},400)
-    elif request.method == 'PATCH': #{"id":1, "username" : "shamallama"}
-        single_user = User.query.filter(User.id == data['id']).first()
-        if single_user:
-            for key, value in data.items():
-                if hasattr(single_user, key):
-                    setattr(single_user, key, value) 
-            try:
-                db.session.add(single_user)
-                db.session.commit()
-                response = make_response({},200) #should send back information to update page yes or no? 
-            except SQLAlchemyError as se:
-                print(se)
-                db.session.rollback()
-                response = server_error_response()
-        else:
-            response = item_not_found_response()
-    elif request.method == 'DELETE':
-        single_user = User.query.filter(User.id == data['id']).first()
-        if single_user:
-            try:
-                db.session.delete(single_user) #Set up cascade delete
-                db.session.commit()
-                response = make_response({},204)
-            except SQLAlchemyError as se:
-                print(se)
-                db.session.rollback()
-                response = server_error_response()
-        else:
-            response = item_not_found_response()
-    return response
+# @app.route('/user', methods = ['POST','PATCH','DELETE'])
+# def user():
+#     data = request.get_json()
+#     if request.method == 'POST':
+#         try:
+#             new_user = User(
+#                 username = data['username'],
+#                 password_hash = data['password'],
+#                 email = data['email']
+#             )
+#             db.session.add(new_user)
+#             db.session.commit()
+#             response = make_response({},200)
+#         except SQLAlchemyError as se:
+#             print(se)
+#             response = server_error_response()
+#         except ValueError as ve:
+#             print(ve)
+#             response = make_response({'Error':'Failed to Create'},400)
+#     elif request.method == 'PATCH': #{"id":1, "username" : "shamallama"}
+#         single_user = User.query.filter(User.id == data['id']).first()
+#         if single_user:
+#             for key, value in data.items():
+#                 if hasattr(single_user, key):
+#                     setattr(single_user, key, value) 
+#             try:
+#                 db.session.add(single_user)
+#                 db.session.commit()
+#                 response = make_response({},200) #should send back information to update page yes or no? 
+#             except SQLAlchemyError as se:
+#                 print(se)
+#                 db.session.rollback()
+#                 response = server_error_response()
+#         else:
+#             response = item_not_found_response()
+#     elif request.method == 'DELETE':
+#         single_user = User.query.filter(User.id == data['id']).first()
+#         if single_user:
+#             try:
+#                 db.session.delete(single_user) #Set up cascade delete
+#                 db.session.commit()
+#                 response = make_response({},204)
+#             except SQLAlchemyError as se:
+#                 print(se)
+#                 db.session.rollback()
+#                 response = server_error_response()
+#         else:
+#             response = item_not_found_response()
+#     return response
 
-@app.route('/users/<int:id>' , methods = ['GET'])
-def getUser(id):
-    single_user = User.query.filter(User.id==id).first()
-    if single_user:
-        response = make_response(jsonify(single_user.to_dict(only=('created_at','profile','username'))), 200) #Rules to remove unnecessary information
-    else:
-        response = item_not_found_response()
+# @app.route('/users/<int:id>' , methods = ['GET'])
+# def getUser(id):
+#     single_user = User.query.filter(User.id==id).first()
+#     if single_user:
+#         response = make_response(jsonify(single_user.to_dict(only=('created_at','profile','username'))), 200) #Rules to remove unnecessary information
+#     else:
+#         response = item_not_found_response()
     
-    return response
+#     return response
 
-######3Inventory Queries######################
+######Inventory Queries######################
 
 @app.route('/inventory/<int:id>', methods = ['GET', 'DELETE'])
 def Userinventory(id):

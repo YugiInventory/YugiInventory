@@ -4,6 +4,7 @@ from flask import Blueprint, request, jsonify , make_response
 #local imports
 from config import db
 from utils.tokenutils import issue_jwt_token , invalidate_refresh_token , token_required
+from utils.server_responseutils import item_not_found_response , unauthorized_response
 from models import User , RefreshToken , Inventory
 
 
@@ -71,8 +72,27 @@ def logout():
 
 @auth_bp.route('/RefreshToken' , methods = ["POST"])
 def refresh_access_token():
+    #Passing the refresh token in the body
+    #I could query either the refresh token directly or query the user_id and then look at the refresh token stored there and compare with what i get back. I think this would be quicker, but assumes I would always get the user id. Simple version first.
+    data = request.get_json()
+    received_token = data['refreshToken']
 
-    pass
+    refresh_token_record_uuid = RefreshToken.query.with_entities(RefreshToken.token,RefreshToken.user_id).filter(RefreshToken.user_id==data['user_id']).first()
+
+    if refresh_token_record_uuid:
+        saved_token = str(refresh_token_record_uuid[0])
+        if saved_token == received_token: 
+            print('match, return new access token')
+            new_accesstoken = issue_jwt_token('temp',data['user_id'])
+            response = make_response(jsonify({"accessToken":new_accesstoken})),201
+        else:
+            print('RefreshToken does not match, Log-in again')
+            response = unauthorized_response()
+
+    else:
+        response = item_not_found_response()
+        print('no record found')
+    return response
 
 @auth_bp.route('/TestAuth', methods=['GET'])
 @token_required
