@@ -5,7 +5,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from models import ReleaseSet, Card
 from utils.server_responseutils import server_error_response
 
-set_bp = Blueprint('/sets',__name__)
+set_bp = Blueprint('sets',__name__)
 
 @set_bp.route('/getAllSets')
 def get_all_sets_info():

@@ -3,11 +3,11 @@ from sqlalchemy.exc import SQLAlchemyError
 
 #Local imports
 from utils.tokenutils import token_required
-from utils.server_responseutils import paginate , server_error_response
+from utils.server_responseutils import paginate , server_error_response , bad_request_response, item_not_found_response
 from models import Card, CardinSet, Inventory
+from config import db
 
-
-inventory_bp = Blueprint('/inventory', __name__)
+inventory_bp = Blueprint('inventory', __name__)
 
 
 @inventory_bp.route('/getUserInventory', methods = ["GET"])
@@ -22,58 +22,140 @@ def getinventory(user_id):
 
     skip_keys = ['page', 'per_page']
     
-    if request.method == 'GET':
-        try:                
-            inventory_filtered_query = Inventory.query.filter(Inventory.user_id == user_id) #Base Query we need to add filter parameters
-            
-            for key, value in request.args.items():
-                if key in filter_mapping:
-                    filter_element = filter_mapping[key](value)
-                    inventory_filtered_query = inventory_filtered_query.filter(filter_element)
+    try:                
+        inventory_filtered_query = Inventory.query.filter(Inventory.user_id == user_id) #Base Query we need to add filter parameters
+        
+        for key, value in request.args.items():
+            if key in filter_mapping:
+                filter_element = filter_mapping[key](value)
+                inventory_filtered_query = inventory_filtered_query.filter(filter_element)
 
-            page = request.args.get('page', default=1,type=int)
-            per_page = request.args.get('per_page', default=20,type=int)
-            paginated_inventory = paginate(inventory_filtered_query,page,per_page)
+        page = request.args.get('page', default=1,type=int)
+        per_page = request.args.get('per_page', default=20,type=int)
+        paginated_inventory = paginate(inventory_filtered_query,page,per_page)
 
-            card_list = [card.to_dict(rules=('-cardinSet.card.card_in_deck','-user','-cardinSet.releaseSet','-cardinSet.releaseSet.id''-cardinSet.card.card_on_banlist','-cardinSet.card')) for card in paginated_inventory.items]
+        card_list = [card.to_dict(rules=('-cardinSet.card.card_in_deck','-user','-cardinSet.releaseSet','-cardinSet.releaseSet.id''-cardinSet.card.card_on_banlist','-cardinSet.card')) for card in paginated_inventory.items]
 
-            response_data = {
-                'cards': card_list,
-                'page': page,
-                'per_page' : per_page,
-                'total_pages' : paginated_inventory.pages,
-                'total_items' : paginated_inventory.total
-             }
-            response = make_response(jsonify(response_data),200)
-        except SQLAlchemyError as se:
-            error_message = f'Error w/ SQLAlchemy {se}'
-            return server_error_response()
-        except Exception as e:
-            error_message = f'Error {e}'
-            return make_response(jsonify({'error': error_message}), 500)
+        response_data = {
+            'cards': card_list,
+            'page': page,
+            'per_page' : per_page,
+            'total_pages' : paginated_inventory.pages,
+            'total_items' : paginated_inventory.total
+            }
+        response = make_response(jsonify(response_data),200)
+    except SQLAlchemyError as se:
+        error_message = f'Error w/ SQLAlchemy {se}'
+        return server_error_response()
+    except Exception as e:
+        error_message = f'Error {e}'
+        return make_response(jsonify({'error': error_message}), 500)
+    return response
+
+@inventory_bp.route('/deleteUsersInventory', methods = ["DELETE"])
+@token_required
+def delete_Inventory(user_id):  
+    #DELETE USERS INVENTORY ITEMS, this shouldnt need to cascade
+    try:
+        db.session.query(Inventory).filter(Inventory.user_id==user_id).delete()
+        db.session.commit()
+        response = make_response({},204)
+    except SQLAlchemyError as se:
+        print(se)   
+        db.session.rollback()
+        response = server_error_response()
+    return response
+
+@inventory_bp.route('/addSingleCardToUserInventory', methods = ["POST"])
+@token_required
+def add_single_card_to_inventory(user_id):
+
+    data = request.get_json()
+    new_card_addition = CardinSet.query.filter(CardinSet.card_code==data['card_id'],CardinSet.rarity==data['rarity']).first()
+
+    if new_card_addition:
+        isduplicate = Inventory.query.filter(Inventory.user_id==user_id,Inventory.cardinSet_id==new_card_addition.id,Inventory.isFirstEd==data['isFirstEd']).first()
+        #This is duplicate block makes it so you can add negative quantities as long as it doesnt go under 1.     
+        if isduplicate:
+            try:
+                new_quantity = int(isduplicate.quantity) + int(data['quantity'])
+                isduplicate.quantity = new_quantity
+                db.session.add(isduplicate)
+                db.session.commit()
+                response = make_response({'Duplicate Entry':'Combined Total Quantity'},250)
+            except SQLAlchemyError as se:
+                print(se)
+                db.session.rollback()
+                response = server_error_response()
+            except ValueError as ve:
+                print(ve)
+                db.session.rollback()
+                response = bad_request_response()
+        else:
+            try:
+                new_inventory_record = Inventory(
+                    quantity = data['quantity'],
+                    isFirstEd = data['isFirstEd'],
+                    user_id = user_id,
+                    cardinSet_id = new_card_addition.id
+                )
+                db.session.add(new_inventory_record)
+                db.session.commit()
+                response = make_response({'Sucess':'Card Added'},201)
+            except ValueError as ve:
+                print(ve)
+                response = bad_request_response()
+            except SQLAlchemyError as se:
+                print(se)
+                db.session.rollback()
+                response = server_error_response()
     else:
-
-        pass 
+        response = item_not_found_response()
 
     return response
 
-@inventory_bp.route('/deleteUsersInventory', methods = ["Delete"])
-@token_required
-def delete_Inventory(user_id):
-    pass
-
-@inventory_bp.route('/addCardToUserInventory', methods = ["POST"])
-@token_required
-def add_card_to_inventory(user_id):
-    pass
 
 @inventory_bp.route('/editCardInUserInventory', methods = ["PATCH"])
 @token_required
-def edit_card_to_inventory(user_id):
-    pass
+def edit_card_in_inventory(user_id):
+    data = request.get_json()
+    card_in_inventory = Inventory.query.filter(Inventory.id == data['id'],Inventory.user_id==user_id).first()
+    if card_in_inventory:
+        try:
+            for key, value in data.items():
+                if hasattr(card_in_inventory, key):
+                    setattr(card_in_inventory, key ,value)
+            db.session.add(card_in_inventory)
+            db.session.commit()
+            response = make_response({},200)
+        except ValueError as ve:
+            print(ve)
+            print('this happened?')
+            response = bad_request_response()
+        except SQLAlchemyError as se:
+            print(se)
+            db.session.rollback()
+            response = server_error_response()
+    else:
+        response = item_not_found_response()    
+    return response
 
-@inventory_bp.route('/deleteCardInUserInventory', methods = ["DELETE"])
+@inventory_bp.route('/deleteCardInUserInventory', methods = ["POST"])
 @token_required
-def edit_card_to_inventory(user_id):
-    pass
+def delete_card_in_inventory(user_id):
+    data = request.get_json()
+    card_in_inventory = Inventory.query.filter(Inventory.id == data['id'],Inventory.user_id==user_id).first()
+
+    if card_in_inventory:
+        try:
+            db.session.delete(card_in_inventory)
+            db.session.commit()
+            response = make_response({},204)
+        except SQLAlchemyError as se:
+            print(se)
+            db.session.rollback()
+            response = server_error_response()
+    else:
+        response = item_not_found_response()
+    return response
 

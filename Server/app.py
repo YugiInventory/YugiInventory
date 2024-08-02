@@ -22,11 +22,13 @@ from routes.auth_routes import auth_bp
 from routes.card_routes import cards_bp
 from routes.set_routes import set_bp
 from routes.user_routes import user_bp
+from routes.inventory_routes import inventory_bp
 
 app.register_blueprint(auth_bp, url_prefix = '/auth')
 app.register_blueprint(cards_bp, url_prefix = '/cards')
 app.register_blueprint(set_bp, url_prefix = '/sets')
 app.register_blueprint(user_bp, url_prefix='/user')
+app.register_blueprint(inventory_bp, url_prefix='/inventory')
 
 ###Helper Functions####
 def server_error_response():
@@ -242,52 +244,52 @@ def home2():
 
 ######Inventory Queries######################
 
-@app.route('/inventory/<int:id>', methods = ['GET', 'DELETE'])
-def Userinventory(id):
+# @app.route('/inventory/<int:id>', methods = ['GET', 'DELETE'])
+# def Userinventory(id):
 
-    filter_mapping = {
-        'name': lambda value: Card.name.contains(value) , #SQLalchemy binary expression type is the returnfrom lambda function
-        'card_code' : lambda value: CardinSet.card_code.contains(value),
-        'rarity' : lambda value: CardinSet.rarity.ilike(f'%{value}%'),
-        'card_type' : lambda value: Card.card_type.ilike(f'%{value}%'), 
-    }
+#     filter_mapping = {
+#         'name': lambda value: Card.name.contains(value) , #SQLalchemy binary expression type is the returnfrom lambda function
+#         'card_code' : lambda value: CardinSet.card_code.contains(value),
+#         'rarity' : lambda value: CardinSet.rarity.ilike(f'%{value}%'),
+#         'card_type' : lambda value: Card.card_type.ilike(f'%{value}%'), 
+#     }
 
-    skip_keys = ['page', 'per_page']
+#     skip_keys = ['page', 'per_page']
     
-    if request.method == 'GET':
-        try:                
-            inventory_filtered_query = Inventory.query.filter(Inventory.user_id == id) #Base Query we need to add filter parameters
+#     if request.method == 'GET':
+#         try:                
+#             inventory_filtered_query = Inventory.query.filter(Inventory.user_id == id) #Base Query we need to add filter parameters
             
-            for key, value in request.args.items():
-                if key in filter_mapping:
-                    filter_element = filter_mapping[key](value)
-                    inventory_filtered_query = inventory_filtered_query.filter(filter_element)
+#             for key, value in request.args.items():
+#                 if key in filter_mapping:
+#                     filter_element = filter_mapping[key](value)
+#                     inventory_filtered_query = inventory_filtered_query.filter(filter_element)
 
-            page = request.args.get('page', default=1,type=int)
-            per_page = request.args.get('per_page', default=20,type=int)
-            paginated_inventory = paginate(inventory_filtered_query,page,per_page)
+#             page = request.args.get('page', default=1,type=int)
+#             per_page = request.args.get('per_page', default=20,type=int)
+#             paginated_inventory = paginate(inventory_filtered_query,page,per_page)
 
-            card_list = [card.to_dict(rules=('-cardinSet.card.card_in_deck','-user','-cardinSet.releaseSet','-cardinSet.releaseSet.id''-cardinSet.card.card_on_banlist','-cardinSet.card')) for card in paginated_inventory.items]
+#             card_list = [card.to_dict(rules=('-cardinSet.card.card_in_deck','-user','-cardinSet.releaseSet','-cardinSet.releaseSet.id''-cardinSet.card.card_on_banlist','-cardinSet.card')) for card in paginated_inventory.items]
 
-            response_data = {
-                'cards': card_list,
-                'page': page,
-                'per_page' : per_page,
-                'total_pages' : paginated_inventory.pages,
-                'total_items' : paginated_inventory.total
-             }
-            response = make_response(jsonify(response_data),200)
-        except SQLAlchemyError as se:
-            error_message = f'Error w/ SQLAlchemy {se}'
-            return server_error_response()
-        except Exception as e:
-            error_message = f'Error {e}'
-            return make_response(jsonify({'error': error_message}), 500)
-    else:
+#             response_data = {
+#                 'cards': card_list,
+#                 'page': page,
+#                 'per_page' : per_page,
+#                 'total_pages' : paginated_inventory.pages,
+#                 'total_items' : paginated_inventory.total
+#              }
+#             response = make_response(jsonify(response_data),200)
+#         except SQLAlchemyError as se:
+#             error_message = f'Error w/ SQLAlchemy {se}'
+#             return server_error_response()
+#         except Exception as e:
+#             error_message = f'Error {e}'
+#             return make_response(jsonify({'error': error_message}), 500)
+#     else:
 
-        pass 
+#         pass 
 
-    return response
+#     return response
 
 
 #####CardinInventory#######
@@ -295,74 +297,74 @@ def Userinventory(id):
 #Delete a card in Inventory
 #Modify a card in Inventory 
 
-@app.route('/CardinInventory', methods = ['POST', 'PATCH', 'DELETE'])
-def modify_Card_in_Inventory():
-    data = request.get_json() #Set code and rarity are necessary to find correct CardinSet_id
+# @app.route('/CardinInventory', methods = ['POST', 'PATCH', 'DELETE'])
+# def modify_Card_in_Inventory():
+#     data = request.get_json() #Set code and rarity are necessary to find correct CardinSet_id
 
-    if request.method == 'POST':
-        #{"quantity": 3, "user_id" : 1, "isFirstEd" : false, "rarity" : "Ghost Rare", "card_id":"TDGS-EN040"} Test on reqbin
-        card_to_make = CardinSet.query.filter(CardinSet.card_code==data['card_id'],CardinSet.rarity==data['rarity']).first()
-        if card_to_make:
+#     if request.method == 'POST':
+#         #{"quantity": 3, "user_id" : 1, "isFirstEd" : false, "rarity" : "Ghost Rare", "card_id":"TDGS-EN040"} Test on reqbin
+#         card_to_make = CardinSet.query.filter(CardinSet.card_code==data['card_id'],CardinSet.rarity==data['rarity']).first()
+#         if card_to_make:
             
-            isduplicate = Inventory.query.filter(Inventory.cardinSet_id==card_to_make.id,Inventory.user_id==data['user_id'],Inventory.isFirstEd==data['isFirstEd']).first()
+#             isduplicate = Inventory.query.filter(Inventory.cardinSet_id==card_to_make.id,Inventory.user_id==data['user_id'],Inventory.isFirstEd==data['isFirstEd']).first()
 
-            if isduplicate:
-                new_q = int(isduplicate.quantity) + int(data['quantity'])
-                isduplicate.quantity = new_q
-                try:
-                    db.session.add(isduplicate)
-                    db.session.commit()
-                    response = make_response({'Duplicate Entry':'combined quantity'}, 250)
-                except SQLAlchemyError as se:
-                    print(se)
-                    response = server_error_response()
-            else:
-                try:
-                    new_inventory_record = Inventory(
-                        quantity = data['quantity'],
-                        isFirstEd = data['isFirstEd'],
-                        user_id = data['user_id'],
-                        cardinSet_id = card_to_make.id
-                    )
-                    db.session.add(new_inventory_record)
-                    db.session.commit()
-                    response = make_response({'Sucess': 'Card Added'},201)
-                except ValueError as ve:
-                    print(ve)
-                    response = bad_request_response()
-                except SQLAlchemyError as se:
-                    print(se)
-                    db.session.rollback()
-                    response = server_error_response()
-        else:
-            response = item_not_found_response()
+#             if isduplicate:
+#                 new_q = int(isduplicate.quantity) + int(data['quantity'])
+#                 isduplicate.quantity = new_q
+#                 try:
+#                     db.session.add(isduplicate)
+#                     db.session.commit()
+#                     response = make_response({'Duplicate Entry':'combined quantity'}, 250)
+#                 except SQLAlchemyError as se:
+#                     print(se)
+#                     response = server_error_response()
+#             else:
+#                 try:
+#                     new_inventory_record = Inventory(
+#                         quantity = data['quantity'],
+#                         isFirstEd = data['isFirstEd'],
+#                         user_id = data['user_id'],
+#                         cardinSet_id = card_to_make.id
+#                     )
+#                     db.session.add(new_inventory_record)
+#                     db.session.commit()
+#                     response = make_response({'Sucess': 'Card Added'},201)
+#                 except ValueError as ve:
+#                     print(ve)
+#                     response = bad_request_response()
+#                 except SQLAlchemyError as se:
+#                     print(se)
+#                     db.session.rollback()
+#                     response = server_error_response()
+#         else:
+#             response = item_not_found_response()
     
-    elif request.method == 'DELETE':
-        #depends on how the info is on the front, we can delete with id or delete from card_id_rarity_id owned. 
-        card = Inventory.query.filter(Inventory.id == data['id']).first()
-        try:
-            db.session.delete(card)
-            db.session.commit()
-            response = make_response({},204)
-        except SQLAlchemyError as se:
-            print(se)
-            db.session.rollback()
-            response = server_error_response()
+#     elif request.method == 'DELETE':
+#         #depends on how the info is on the front, we can delete with id or delete from card_id_rarity_id owned. 
+#         card = Inventory.query.filter(Inventory.id == data['id']).first()
+#         try:
+#             db.session.delete(card)
+#             db.session.commit()
+#             response = make_response({},204)
+#         except SQLAlchemyError as se:
+#             print(se)
+#             db.session.rollback()
+#             response = server_error_response()
     
-    elif request.method == 'PATCH':
-        owned_card = Inventory.query.filter(Inventory.id == data['id']).first()
-        for key, value in data.items():
-            if hasattr(owned_card, key):
-                setattr(owned_card, key, value) 
-        try:
-            db.session.add(owned_card)
-            db.session.commit()
-            response = make_response({},200) #should send back information to update page yes or no?, no since we already have that value stored in the front end. 
-        except SQLAlchemyError as se:
-            print(se)
-            db.session.rollback()
-            response = server_error_response()
-    return response
+#     elif request.method == 'PATCH':
+#         owned_card = Inventory.query.filter(Inventory.id == data['id']).first() #I could edit somebody else card if the wrong id is sent
+#         for key, value in data.items():
+#             if hasattr(owned_card, key):
+#                 setattr(owned_card, key, value) 
+#         try:
+#             db.session.add(owned_card)
+#             db.session.commit()
+#             response = make_response({},200) #should send back information to update page yes or no?, no since we already have that value stored in the front end. 
+#         except SQLAlchemyError as se:
+#             print(se)
+#             db.session.rollback()
+#             response = server_error_response()
+#     return response
 
 ##########Deck Queries####################3
 #Create a Deck

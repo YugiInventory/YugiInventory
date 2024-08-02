@@ -5,7 +5,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from models import Card
 from utils.server_responseutils import paginate , server_error_response , item_not_found_response
 
-cards_bp = Blueprint('/cards', __name__)
+cards_bp = Blueprint('cards', __name__)
 
 
 @cards_bp.route('/getAllCards')

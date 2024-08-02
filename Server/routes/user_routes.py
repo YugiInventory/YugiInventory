@@ -9,7 +9,7 @@ from utils.server_responseutils import server_error_response , item_not_found_re
 from utils.tokenutils import token_required
 
 
-user_bp = Blueprint('/user', __name__)
+user_bp = Blueprint('user', __name__)
 
 
 @user_bp.route('/createUser', methods=['POST'])
