@@ -23,12 +23,18 @@ from routes.card_routes import cards_bp
 from routes.set_routes import set_bp
 from routes.user_routes import user_bp
 from routes.inventory_routes import inventory_bp
+from routes.deck_routes import deck_bp
+from routes.cardindeck_routes import cardinDeck_bp
+from routes.reconcile_routes import reconcile_bp
 
 app.register_blueprint(auth_bp, url_prefix = '/auth')
 app.register_blueprint(cards_bp, url_prefix = '/cards')
 app.register_blueprint(set_bp, url_prefix = '/sets')
 app.register_blueprint(user_bp, url_prefix='/user')
 app.register_blueprint(inventory_bp, url_prefix='/inventory')
+app.register_blueprint(deck_bp , url_prefix='/deck')
+app.register_blueprint(cardinDeck_bp, url_prefix="/cardinDeck")
+app.register_blueprint(reconcile_bp)
 
 ###Helper Functions####
 def server_error_response():
@@ -85,15 +91,10 @@ def validate_jwt(token, key = app.config['SECRET_KEY'], refreshToken = None):
     except jwt.InvalidTokenError:
         pass
 
-@app.route('/')
 
 @app.route('/')
 def home():
-    return 'test'
-
-@app.route('/t2')
-def home2():
-    return 'jajaja'
+    return 'homse'
 
 ####################Card Queries####################3333
 # @app.route('/cards') #Load all card info. 
@@ -370,94 +371,94 @@ def home2():
 #Create a Deck
 #Get a Deck
 
-@app.route('/deck' , methods = ['POST' , 'PATCH' , 'DELETE'])
-def deck():
+# @app.route('/deck' , methods = ['POST' , 'PATCH' , 'DELETE'])
+# def deck():
 
-    data = request.get_json()
+#     data = request.get_json()
 
-    if request.method == 'POST':
-        try:
-            new_deck = Deck(
-                isPublic = True,
-                user_id = data['user_id'],
-                name = data['name']
-            )
-            db.session.add(new_deck)
-            db.session.commit()
-            response = make_response({'Sucess' : 'Deck created'},201)
-        except SQLAlchemyError as se:
-            db.session.rollback()
-            print(se)
-            response = server_error_response
-    elif request.method == 'DELETE':   ##might have to be its own thing for some servers, DELETe shouldnt havea  request body and be able to find everything with the URI 
-        single_deck = Deck.query.filter(Deck.id==data['deck_id']).first()
-        if single_deck:
-            cards_in_deck = CardinDeck.query.filter(CardinDeck.deck_id==data['deck_id']).all()
-            try:
-                for single_card in cards_in_deck:
-                    db.session.delete(single_card)
-                db.session.delete(single_deck)
-                db.session.commit()
-                response = make_response({},204)
-            except SQLAlchemyError as se:
-                db.session.rollback()
-                print(se)
-                response = server_error_response()
-        else:
-            response = item_not_found_response() #404 Deck not found
-    elif request.method == 'PATCH':
-        single_deck = Deck.query.filter(Deck.id==data['deck_id']).first()
-        if single_deck:
-            for key,value in data.items():
-                if hasattr(single_deck,key):
-                    setattr(single_deck,key,value)
-            try:
-                db.session.add(single_deck)
-                db.session.commit()
-                response = make_response({'Sucess':'Updated'},202)
-            except SQLAlchemyError as se:
-                db.session.rollback()
-                print(se)
-                response = server_error_response()
-        else:
-            response = item_not_found_response()
-    return response
+#     if request.method == 'POST':
+#         try:
+#             new_deck = Deck(
+#                 isPublic = True,
+#                 user_id = data['user_id'],
+#                 name = data['name']
+#             )
+#             db.session.add(new_deck)
+#             db.session.commit()
+#             response = make_response({'Sucess' : 'Deck created'},201)
+#         except SQLAlchemyError as se:
+#             db.session.rollback()
+#             print(se)
+#             response = server_error_response
+#     elif request.method == 'DELETE':   ##might have to be its own thing for some servers, DELETe shouldnt havea  request body and be able to find everything with the URI 
+#         single_deck = Deck.query.filter(Deck.id==data['deck_id']).first()
+#         if single_deck:
+#             cards_in_deck = CardinDeck.query.filter(CardinDeck.deck_id==data['deck_id']).all()
+#             try:
+#                 for single_card in cards_in_deck:
+#                     db.session.delete(single_card)
+#                 db.session.delete(single_deck)
+#                 db.session.commit()
+#                 response = make_response({},204)
+#             except SQLAlchemyError as se:
+#                 db.session.rollback()
+#                 print(se)
+#                 response = server_error_response()
+#         else:
+#             response = item_not_found_response() #404 Deck not found
+#     elif request.method == 'PATCH':
+#         single_deck = Deck.query.filter(Deck.id==data['deck_id']).first()
+#         if single_deck:
+#             for key,value in data.items():
+#                 if hasattr(single_deck,key):
+#                     setattr(single_deck,key,value)
+#             try:
+#                 db.session.add(single_deck)
+#                 db.session.commit()
+#                 response = make_response({'Sucess':'Updated'},202)
+#             except SQLAlchemyError as se:
+#                 db.session.rollback()
+#                 print(se)
+#                 response = server_error_response()
+#         else:
+#             response = item_not_found_response()
+#     return response
 
-@app.route('/decks', methods = ['GET'])
-def decks():
+# @app.route('/decks', methods = ['GET'])
+# def decks():
 
-    filter_mapping = {
-        'user_id' : lambda value: Deck.user_id==value,
-        'name' : lambda value: Deck.name.ilike(f'%{value}%'),
-        'id' : lambda value: Deck.id==value
-    }
+#     filter_mapping = {
+#         'user_id' : lambda value: Deck.user_id==value,
+#         'name' : lambda value: Deck.name.ilike(f'%{value}%'),
+#         'id' : lambda value: Deck.id==value
+#     }
 
-    try:
-        filter_elements = []
-        for key,value in request.args.items():
-            filter_element = filter_mapping[key](value)   
-            filter_elements.append(filter_element)
-        decks_list = Deck.query.filter(*filter_elements).all()
-        deck_list = [deck.to_dict(rules=('-card_in_deck','-user'))for deck in decks_list]
-        response = make_response(jsonify(deck_list), 200)
-    except SQLAlchemyError as se:
-        print(se)
-        response = server_error_response()
-    return response
+#     try:
+#         filter_elements = []
+#         for key,value in request.args.items():
+#             filter_element = filter_mapping[key](value)   
+#             filter_elements.append(filter_element)
+#         decks_list = Deck.query.filter(*filter_elements).all()
+#         deck_list = [deck.to_dict(rules=('-card_in_deck','-user'))for deck in decks_list]
+#         response = make_response(jsonify(deck_list), 200)
+#     except SQLAlchemyError as se:
+#         print(se)
+#         response = server_error_response()
+#     return response
 
-@app.route('/singleDeck/<int:deck_id>', methods = ['GET']) #When we want to display a deck info so we pass in the deck cards and etc
-def singleDeck(deck_id):
-    single_deck = Deck.query.filter(Deck.id == deck_id).first()
+# @app.route('/singleDeck/<int:deck_id>', methods = ['GET']) #When we want to display a deck info so we pass in the deck cards and etc
+# def singleDeck(deck_id):
+#     single_deck = Deck.query.filter(Deck.id == deck_id).first()
 
-    if single_deck:
-        try:
-            response = make_response(jsonify(single_deck.to_dict()),200)
-        except SQLAlchemyError as se:
-            print(se)
-            response = server_error_response()
-    else:
-        response = item_not_found_response()
-    return response
+#     if single_deck:
+#         try:
+#             response = make_response(jsonify(single_deck.to_dict()),200)
+#         except SQLAlchemyError as se:
+#             print(se)
+#             response = server_error_response()
+#     else:
+#         response = item_not_found_response()
+#     return response
 
 
 
@@ -466,105 +467,107 @@ def singleDeck(deck_id):
 #Delete a card in Deck
 #Modify a card in Deck
 
-@app.route('/CardinDeck', methods = ['POST', 'PATCH', 'DELETE'])
-def modify_Card_in_Deck():
-    data = request.get_json()
+# @app.route('/CardinDeck', methods = ['POST', 'PATCH', 'DELETE'])
+# def modify_Card_in_Deck():
+#     data = request.get_json()
 
-    if request.method == 'POST':
-        card_to_add = Card.query.filter(Card.id==data['card_id']).first()
-        if card_to_add:
-            try:
-                new_card_in_deck = CardinDeck(
-                    quantity = data['quantity'],
-                    location = data['location'],
-                    deck_id = data['deck_id'],
-                    card_id = card_to_add.id
-                )
-                db.session.add(new_card_in_deck)
-                db.session.commit()
-                response = make_response({'Sucess': 'Card Added'}, 201)
-            except ValueError as ve:
-                print(ve)
-                response = validation_error_response()
-            except SQLAlchemyError as se:
-                print(se)
-                db.session.rollback()
-                response = server_error_response()
-        else:
-            response = item_not_found_response()
-    elif request.method == 'PATCH':
-        card_in_deck = CardinDeck.query.filter(CardinDeck.id == data['card_in_deck_id']).first()
-        for key,value in data.items():
-            if hasattr(card_in_deck,key):
-                setattr(card_in_deck,key,value)
-            try:
-                db.session.add(card_in_deck)
-                db.session.commit()
-                response = make_response({},200)
-            except SQLAlchemyError as se:
-                print(se)
-                db.session.rollback()
-                response = server_error_response()
-    elif request.method == 'DELETE':
-        card_in_deck = CardinDeck.query.filter(CardinDeck.id == data['card_in_deck_id']).first()
-        try:
-            db.session.delete(card_in_deck)
-            db.session.commit()
-            response = make_response({},204)
-        except SQLAlchemyError as se:
-            print(se)
-            db.session.rollback()
-            response = server_error_response()
-    return response
+#     if request.method == 'POST':
+#         card_to_add = Card.query.filter(Card.id==data['card_id']).first()
+#         if card_to_add:
+#             try:
+#                 new_card_in_deck = CardinDeck(
+#                     quantity = data['quantity'],
+#                     location = data['location'],
+#                     deck_id = data['deck_id'],
+#                     card_id = card_to_add.id
+#                 )
+#                 db.session.add(new_card_in_deck)
+#                 db.session.commit()
+#                 response = make_response({'Sucess': 'Card Added'}, 201)
+#             except ValueError as ve:
+#                 print(ve)
+#                 response = validation_error_response()
+#             except SQLAlchemyError as se:
+#                 print(se)
+#                 db.session.rollback()
+#                 response = server_error_response()
+#         else:
+#             response = item_not_found_response()
+#     elif request.method == 'PATCH':
+#         card_in_deck = CardinDeck.query.filter(CardinDeck.id == data['card_in_deck_id']).first()
+#         for key,value in data.items():
+#             if hasattr(card_in_deck,key):
+#                 setattr(card_in_deck,key,value)
+#             try:
+#                 db.session.add(card_in_deck)
+#                 db.session.commit()
+#                 response = make_response({},200)
+#             except SQLAlchemyError as se:
+#                 print(se)
+#                 db.session.rollback()
+#                 response = server_error_response()
+#     elif request.method == 'DELETE':
+#         card_in_deck = CardinDeck.query.filter(CardinDeck.id == data['card_in_deck_id']).first()
+#         try:
+#             db.session.delete(card_in_deck)
+#             db.session.commit()
+#             response = make_response({},204)
+#         except SQLAlchemyError as se:
+#             print(se)
+#             db.session.rollback()
+#             response = server_error_response()
+#     return response
 
 
 ######Reconciliation Routes################
 
-@app.route('/InventRecon/<int:userid>', methods = ['POST'])
-def ReconDecks(userid):
-    #Get a list of deck ids that we want to reconcile against
-    deck_list = request.get_json() #list of decks 
+# @app.route('/InventRecon/<int:userid>', methods = ['POST'])
+# def ReconDecks(userid):
+#     #Get a list of deck ids that we want to reconcile against
+#     deck_list = request.get_json() #list of decks 
 
 
-    base = db.session.query(Inventory)
-    invent = base.filter(Inventory.user_id==userid).outerjoin(CardinSet,Inventory.cardinSet_id==CardinSet.id).outerjoin(Card,CardinSet.card_id==Card.id)
-    id_count = {}
-    cards_by_deck = {}  
+#     base = db.session.query(Inventory)
+#     invent = base.filter(Inventory.user_id==userid).outerjoin(CardinSet,Inventory.cardinSet_id==CardinSet.id).outerjoin(Card,CardinSet.card_id==Card.id)
+#     id_count = {}
+#     cards_by_deck = {}  
 
-    for val in deck_list: #[1,2]
-        cards_in_deck = CardinDeck.query.filter(CardinDeck.deck_id==val).all() #[1,2,3,4,5]
-        deck_name = db.session.query(Deck.name).filter(Deck.id==val).scalar()  #Blackwing 
+#     for val in deck_list: #[1,2]
+#         cards_in_deck = CardinDeck.query.filter(CardinDeck.deck_id==val).all() #[1,2,3,4,5]
         
-        for card in cards_in_deck: 
+        
+#         deck_name = db.session.query(Deck.name).filter(Deck.id==val).scalar()  #Blackwing 
+        
+#         for card in cards_in_deck: 
 
-            id_count[card.card_id] = id_count.get(card.card_id,0) + card.quantity #if it doesnt exist its 0+ quantity, 
-            cards_by_deck.setdefault(card.card_id, []).append((card.quantity, deck_name, val)) #if it doesnt exist we set it to the empty list then add the tuple
+#             id_count[card.card_id] = id_count.get(card.card_id,0) + card.quantity #if it doesnt exist its 0+ quantity, 
+#             cards_by_deck.setdefault(card.card_id, []).append((card.quantity, deck_name, val)) #if it doesnt exist we set it to the empty list then add the tuple
 
 
-    #Now we have all the cards, lets compare it against the users inventory
+#     #Now we have all the cards, lets compare it against the users inventory
             
-    recon_array = []
-    for card_id,quantity in id_count.items():
+#     recon_array = []
+#     for card_id,quantity in id_count.items():
 
-        cards_owned = invent.filter(Card.id==card_id).all() #all copies of the card
-        c_name = db.session.query(Card.name).filter(Card.id==card_id).first()[0]
+#         cards_owned = invent.filter(Card.id==card_id).all() #all copies of the card
+#         c_name = db.session.query(Card.name).filter(Card.id==card_id).first()[0]
         
-        owned_quantity = sum(record.quantity for record in cards_owned) if cards_owned else 0
-        needed = max(0,quantity-owned_quantity)
+#         owned_quantity = sum(record.quantity for record in cards_owned) if cards_owned else 0
+#         needed = max(0,quantity-owned_quantity)
 
-        data_obj = {
-            'name': c_name,
-            'id' : card_id,
-            'owned': owned_quantity,
-            'required' : quantity,
-            'need' : needed,
-            'usage' : cards_by_deck[card_id]
-        }
+#         data_obj = {
+#             'name': c_name,
+#             'id' : card_id,
+#             'owned': owned_quantity,
+#             'required' : quantity,
+#             'need' : needed,
+#             'usage' : cards_by_deck[card_id]
+#         }
 
-        recon_array.append(data_obj)
+#         recon_array.append(data_obj)
 
-    response = make_response(jsonify(recon_array), 200)
-    return response
+#     response = make_response(jsonify(recon_array), 200)
+#     return response
 
 # @app.route('/Login', methods = ['POST'])
 # def Login():    

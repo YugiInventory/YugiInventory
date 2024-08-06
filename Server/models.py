@@ -107,7 +107,7 @@ class Inventory(db.Model, SerializerMixin):
     def validate_quantity(self,key,quantity):
         if int(quantity) >0:
             return quantity
-        raise ValueError
+        raise ValueError("Quantity must be greater than 0")
 
     #Serializer Rules
     serialize_rules = ('-user.card_in_inventory','-cardinSet.card_in_inventory','-card.releaseSet','-card.card_in_deck','-user.user_decks')  
@@ -185,6 +185,7 @@ class Deck(db.Model, SerializerMixin):
 
     #validations
     #Cards in a deck can not have more than 3 copies. 
+    #Deck names cannot be the same
 
     #Serializer Rules
     

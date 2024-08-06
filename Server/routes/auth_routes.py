@@ -18,8 +18,10 @@ def Login():
     user = User.query.filter(User.username == user_info['username']).first()
 
     if 'refreshToken' in user_info:
+
         #Check if refreshToken is Valid
         #If Valid return an access Token
+        #if invalid return that to client so they can ask for auth
         issue_jwt_token()
         pass
 
@@ -70,16 +72,18 @@ def logout():
         return response
     return make_response({},401)
 
-@auth_bp.route('/RefreshToken' , methods = ["POST"])
+@auth_bp.route('/RefreshAccessToken' , methods = ["POST"])
 def refresh_access_token():
     #Passing the refresh token in the body
     #I could query either the refresh token directly or query the user_id and then look at the refresh token stored there and compare with what i get back. I think this would be quicker, but assumes I would always get the user id. Simple version first.
     data = request.get_json()
     received_token = data['refreshToken']
 
-    refresh_token_record_uuid = RefreshToken.query.with_entities(RefreshToken.token,RefreshToken.user_id).filter(RefreshToken.user_id==data['user_id']).first()
+    refresh_token_record_uuid = RefreshToken.query.with_entities(RefreshToken.token,RefreshToken.expiration_time).filter(RefreshToken.user_id==data['user_id']).first()
 
+    #Check if refresh token is valid also. 
     if refresh_token_record_uuid:
+    
         saved_token = str(refresh_token_record_uuid[0])
         if saved_token == received_token: 
             print('match, return new access token')
