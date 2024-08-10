@@ -10,6 +10,7 @@ cards_bp = Blueprint('cards', __name__)
 
 @cards_bp.route('/getAllCards')
 def get_all_cards():
+    
     filter_mapping = {
         'name' : lambda value: Card.name.ilike(f'%{value}%'),
         'card_type' : lambda value: Card.card_type.ilike(f'%{value}%'), 

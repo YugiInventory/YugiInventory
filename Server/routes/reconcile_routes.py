@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify, make_response
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.exc import SQLAlchemyError , DataError , IntegrityError 
+from sqlalchemy.exc import DataError
 
 from utils.tokenutils import token_required
 from config import db
@@ -13,7 +14,8 @@ reconcile_bp = Blueprint('reconcile',__name__)
 def reconcile_selected_decks_with_inventory(user_id):
     
     deck_list = request.get_json()
-
+    print(deck_list)
+    print('lala')
     base = db.session.query(Inventory)
     invent = base.filter(Inventory.user_id==user_id).outerjoin(CardinSet,Inventory.cardinSet_id==CardinSet.id).outerjoin(Card,CardinSet.card_id==Card.id)
 

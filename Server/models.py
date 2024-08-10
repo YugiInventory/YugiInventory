@@ -259,6 +259,7 @@ class CardinDeck(db.Model, SerializerMixin):
 
 def validate_card_in_deck_insert_deck(mapper,connection,target):
     print(target)
+    print('hahaxd')
     target.validate_self()
 
 event.listen(CardinDeck, 'before_insert',validate_card_in_deck_insert_deck)

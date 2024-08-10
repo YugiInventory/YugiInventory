@@ -61,7 +61,8 @@ def Login():
     return response
 
 @auth_bp.route('/Logout' , methods = ["POST"])
-def logout():
+@token_required
+def logout(user_id):
     #Send back the user id, delete that entry from the refreshToken table. 
     data = request.get_json()
     #expect the user_id 

@@ -37,59 +37,59 @@ app.register_blueprint(cardinDeck_bp, url_prefix="/cardinDeck")
 app.register_blueprint(reconcile_bp)
 
 ###Helper Functions####
-def server_error_response():
-    return jsonify({'Error': 'Server Error'}),500
+# def server_error_response():
+#     return jsonify({'Error': 'Server Error'}),500
 
-def item_not_found_response():
-    return jsonify({'Error': 'Item not found'}), 404
+# def item_not_found_response():
+#     return jsonify({'Error': 'Item not found'}), 404
 
-def validation_error_response():
-    return jsonify({'Error': 'Validation Error'}), 403
+# def validation_error_response():
+#     return jsonify({'Error': 'Validation Error'}), 403
 
-def bad_request_response():
-    return jsonify({'Error':'Bad Request'}),400
-#item_not_found_response = make_response({'Error':'Item not found'},404)
+# def bad_request_response():
+#     return jsonify({'Error':'Bad Request'}),400
+# #item_not_found_response = make_response({'Error':'Item not found'},404)
 
-def paginate(query,page, per_page):
-    return query.paginate(page=page,per_page=per_page) #these all have to be deinfed with keyword only?
-
-
-def invalidate_refresh_token(user_id):
-    #this would be deleted from the server
-    refreshToken = RefreshToken.query.filter(RefreshToken.user_id == user_id).first()
-    if refreshToken:
-        db.session.delete(refreshToken)
-        db.session.commit()
-        return True
-    return False
+# def paginate(query,page, per_page):
+#     return query.paginate(page=page,per_page=per_page) #these all have to be deinfed with keyword only?
 
 
-def handle_expired_jwt(token, key, refreshToken=None):
-    expired_payload = jwt.decode(token,key=key, algorithms = ["HS256"], verify=False)
-    if refreshToken:
-        #check if valid refresh
-        known_token = RefreshToken.query.filter(RefreshToken.user_id==expired_payload.user_id).first()
-        if known_token and known_token.token == refreshToken:
-            new_JWT_Token = issue_jwt_token(expired_payload.username, expired_payload.user_id)
-            return new_JWT_Token, expired_payload
-        else:
-            #Expired JWT and Invalid Refresh require relogin and destroy saved refresh token.
-            invalidate_refresh_token(expired_payload.user_id)
-    else:
-        #Error require relog no Refresh Token
-        pass
-    return None, None , None
+# def invalidate_refresh_token(user_id):
+#     #this would be deleted from the server
+#     refreshToken = RefreshToken.query.filter(RefreshToken.user_id == user_id).first()
+#     if refreshToken:
+#         db.session.delete(refreshToken)
+#         db.session.commit()
+#         return True
+#     return False
 
-def validate_jwt(token, key = app.config['SECRET_KEY'], refreshToken = None):
-    try:
-        decoded_token = jwt.decode(token,key,algorithms=["HS256"])
-        return decoded_token
-    except jwt.ExpiredSignatureError:
-        new_jwt, decoded_payload = handle_expired_jwt(token=token,key=key,refreshToken=refreshToken)
-        if new_jwt:
-            return decoded_payload
-    except jwt.InvalidTokenError:
-        pass
+
+# def handle_expired_jwt(token, key, refreshToken=None):
+#     expired_payload = jwt.decode(token,key=key, algorithms = ["HS256"], verify=False)
+#     if refreshToken:
+#         #check if valid refresh
+#         known_token = RefreshToken.query.filter(RefreshToken.user_id==expired_payload.user_id).first()
+#         if known_token and known_token.token == refreshToken:
+#             new_JWT_Token = issue_jwt_token(expired_payload.username, expired_payload.user_id)
+#             return new_JWT_Token, expired_payload
+#         else:
+#             #Expired JWT and Invalid Refresh require relogin and destroy saved refresh token.
+#             invalidate_refresh_token(expired_payload.user_id)
+#     else:
+#         #Error require relog no Refresh Token
+#         pass
+#     return None, None , None
+
+# def validate_jwt(token, key = app.config['SECRET_KEY'], refreshToken = None):
+#     try:
+#         decoded_token = jwt.decode(token,key,algorithms=["HS256"])
+#         return decoded_token
+#     except jwt.ExpiredSignatureError:
+#         new_jwt, decoded_payload = handle_expired_jwt(token=token,key=key,refreshToken=refreshToken)
+#         if new_jwt:
+#             return decoded_payload
+#     except jwt.InvalidTokenError:
+#         pass
 
 
 @app.route('/')

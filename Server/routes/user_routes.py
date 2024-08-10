@@ -6,8 +6,8 @@ from sqlalchemy.exc import SQLAlchemyError
 from models import User
 from config import db
 from utils.server_responseutils import server_error_response , item_not_found_response
-from utils.tokenutils import token_required
-
+from utils.tokenutils import token_required , authorize , is_authorized_to_modify
+from utils.constants import ALLOWED_ATTRIBUTES
 
 user_bp = Blueprint('user', __name__)
 
@@ -35,25 +35,29 @@ def create_user():
 
 @user_bp.route('/editUser', methods = ["PATCH"])
 @token_required
-def edit_user_parameters(user_id):
+def edit_user_parameters(user_id, **kwargs):
     data = request.get_json()
-    single_user = User.query.filter(User.id == user_id).first()
+    user_to_edit = User.query.filter(User.id==user_id).first()
+    for key , value in data.items():
 
-    if single_user:
-        for key , value in data.items():
-            if hasattr(single_user, key):
-                setattr(single_user, key, value)
-            try:
-                db.session.add(single_user)
-                db.session.commit()
-                response = make_response({},200)
-            except SQLAlchemyError as se:
-                print(se)
-                db.session.rollback()
-                response = server_error_response()
-    else:
-        response = item_not_found_response()
-    
+        if key=='password':
+            setattr(user_to_edit,'password_hash',value)
+
+        if hasattr(user_to_edit, key) and key in ALLOWED_ATTRIBUTES["User"]:
+            setattr(user_to_edit, key, value)
+        try:
+            db.session.add(user_to_edit)
+            db.session.commit()
+            response = make_response({},201)
+        except SQLAlchemyError as se:
+            print(se)
+            db.session.rollback()
+            response = server_error_response()   
+        except ValueError as ve:
+            print(ve)
+            db.session.rollback()
+            response = server_error_response()
+    print('jaja;') 
     return response
 
 @user_bp.route('/deleteUser' , methods = ["DELETE"])

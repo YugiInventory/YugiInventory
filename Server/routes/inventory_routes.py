@@ -2,8 +2,9 @@ from flask import Blueprint, make_response , jsonify , request
 from sqlalchemy.exc import SQLAlchemyError
 
 #Local imports
-from utils.tokenutils import token_required
+from utils.tokenutils import token_required , authorize , is_authorized_to_modify , is_authorized_to_create
 from utils.server_responseutils import paginate , server_error_response , bad_request_response, item_not_found_response
+from utils.constants import ALLOWED_ATTRIBUTES
 from models import Card, CardinSet, Inventory
 from config import db
 
@@ -13,6 +14,7 @@ inventory_bp = Blueprint('inventory', __name__)
 @inventory_bp.route('/getUserInventory', methods = ["GET"])
 @token_required
 def getinventory(user_id):
+
     filter_mapping = {
         'name': lambda value: Card.name.contains(value) , #SQLalchemy binary expression type is the returnfrom lambda function
         'card_code' : lambda value: CardinSet.card_code.contains(value),
@@ -54,6 +56,7 @@ def getinventory(user_id):
 
 @inventory_bp.route('/deleteUsersInventory', methods = ["DELETE"])
 @token_required
+@authorize(is_authorized_to_modify,edit=True)
 def delete_Inventory(user_id):  
     #DELETE USERS INVENTORY ITEMS, this shouldnt need to cascade
     try:
@@ -68,14 +71,25 @@ def delete_Inventory(user_id):
 
 @inventory_bp.route('/addSingleCardToUserInventory', methods = ["POST"])
 @token_required
-def add_single_card_to_inventory(user_id):
+@authorize(is_authorized_to_create,edit=False)
+def add_single_card_to_inventory(user_id, **kwargs):
+    #Addition still needs to check for existance here
 
-    data = request.get_json()
-    new_card_addition = CardinSet.query.filter(CardinSet.card_code==data['card_id'],CardinSet.rarity==data['rarity']).first()
+    resource_id = kwargs["resource_id"]
+    
+    data = request.get_json() #handle this in kwargs instead 
+
+
+    # new_card_addition = CardinSet.query.filter(CardinSet.card_code==data['card_id'],CardinSet.rarity==data['rarity']).first()
+
+
+    new_card_addition = CardinSet.query.filter(CardinSet.id==resource_id).first()
 
     if new_card_addition:
         isduplicate = Inventory.query.filter(Inventory.user_id==user_id,Inventory.cardinSet_id==new_card_addition.id,Inventory.isFirstEd==data['isFirstEd']).first()
         #This is duplicate block makes it so you can add negative quantities as long as it doesnt go under 1.     
+
+        #CardinSetid and isFirstEd need to match, 
         if isduplicate:
             try:
                 new_quantity = int(isduplicate.quantity) + int(data['quantity'])
@@ -117,45 +131,42 @@ def add_single_card_to_inventory(user_id):
 
 @inventory_bp.route('/editCardInUserInventory', methods = ["PATCH"])
 @token_required
-def edit_card_in_inventory(user_id):
-    data = request.get_json()
-    card_in_inventory = Inventory.query.filter(Inventory.id == data['id'],Inventory.user_id==user_id).first()
-    if card_in_inventory:
-        try:
-            for key, value in data.items():
-                if hasattr(card_in_inventory, key):
-                    setattr(card_in_inventory, key ,value)
-            db.session.add(card_in_inventory)
-            db.session.commit()
-            response = make_response({},200)
-        except ValueError as ve:
-            print(ve)
-            print('this happened?')
-            response = bad_request_response()
-        except SQLAlchemyError as se:
-            print(se)
-            db.session.rollback()
-            response = server_error_response()
-    else:
-        response = item_not_found_response()    
+@authorize(is_authorized_to_modify,edit=True)
+def edit_card_in_inventory(user_id, **kwargs):
+    card_to_edit = kwargs['resource']
+
+    try:
+        for key, value in kwargs.items():
+            if hasattr(card_to_edit, key) and key in ALLOWED_ATTRIBUTES["Inventory"]:
+                setattr(card_to_edit, key ,value)
+        db.session.add(card_to_edit)
+        db.session.commit()
+        response = make_response({},200)
+    except ValueError as ve:
+        print(ve)
+        print('this happened?')
+        response = bad_request_response()
+    except SQLAlchemyError as se:
+        print(se)
+        db.session.rollback()
+        response = server_error_response()
     return response
 
 @inventory_bp.route('/deleteCardInUserInventory', methods = ["POST"])
 @token_required
-def delete_card_in_inventory(user_id):
-    data = request.get_json()
-    card_in_inventory = Inventory.query.filter(Inventory.id == data['id'],Inventory.user_id==user_id).first()
+@authorize(is_authorized_to_modify,edit=True)
+def delete_card_in_inventory(user_id, **kwargs):
+    
+    card_to_delete = kwargs["resource"]
+    
+    try:
+        db.session.delete(card_to_delete)
+        db.session.commit()
+        response = make_response({},204)
+    except SQLAlchemyError as se:
+        print(se)
+        db.session.rollback()
+        response = server_error_response()
 
-    if card_in_inventory:
-        try:
-            db.session.delete(card_in_inventory)
-            db.session.commit()
-            response = make_response({},204)
-        except SQLAlchemyError as se:
-            print(se)
-            db.session.rollback()
-            response = server_error_response()
-    else:
-        response = item_not_found_response()
     return response
 

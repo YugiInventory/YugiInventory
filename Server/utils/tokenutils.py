@@ -6,10 +6,12 @@ from config import app,db
 from functools import wraps
 
 from models import RefreshToken , Card , CardinDeck , Deck , Inventory , User
+from utils.constants import MODEL_MAP
+
+
 
 def issue_jwt_token(username,user_id):
-    token = jwt.encode({'username':username,'user_id':user_id,'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=15)},app.config['SECRET_KEY'])            
-    
+    token = jwt.encode({'username':username,'user_id':user_id,'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=45)},app.config['SECRET_KEY'])            
     return token
 
 
@@ -34,35 +36,55 @@ def token_required(f):
         token = None
         if 'Authorization' in request.headers:
             token = request.headers['Authorization'].split(" ")[1]
-            print('Auth in here')
         if not token:
             return jsonify({'message': 'No Token'}), 401
         
         try:
             data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
-            print(data)
             user_id = int(data['user_id']) #extracting from token returns a str. 
         except Exception as e:
             print(e)
+            print(type(e))
             return jsonify({"message":"invalid token"}), 401
-        # kwargs['test'] = 5
         return f(user_id, *args, **kwargs)
     return decorated
 
-def authorize(check_func): 
+def authorize(check_func , edit=False): 
     def decorator(f):
         @wraps(f)
         def decorated(user_id,*args,**kwargs): 
+            
             data = request.get_json()
-            if not check_func(user_id, *args, **data):
+            
+            if edit:
+                resource_location = data.get("resource_location")
+                resource_id = data.get("resource_id")
+                resource = resource_exists(resource_location,resource_id)
+                if not resource:
+                    return jsonify({"Error":"Resource does not exist"}),404
+                kwargs['resource'] = resource
+            kwargs.update(data)
+            if not check_func(user_id, *args, **kwargs):
                 return jsonify({"Error":"Unauthorized"}), 403
-            return f(*args,**data)
+            return f(user_id,*args,**kwargs)
         return decorated
     return decorator
 
 def is_authorized_to_create(user_id, *args, **kwargs): 
     #Check if user can create the resource
-    ##Unpack args/kwargs in the function
+    ##Unpack args/kwargs in the functio
+    ## For Card in Deck can you create the resource if you own the deck
+
+    resource_location = kwargs["resource_location"]
+
+    if resource_location.lower() == 'cardsindecks':
+        deck_id = kwargs.get("deck_id")
+        if not deck_id:
+            return False
+        deck = Deck.query.filter(Deck.id==deck_id).first()
+        if deck and deck.user_id==user_id:
+            return True
+        return False
     return True
 
 
@@ -86,7 +108,7 @@ def is_authorized_to_modify(user_id, *args,**kwargs): #check if user owns the re
     if model_class== CardinDeck:
         card_to_edit = CardinDeck.query.filter(CardinDeck.id==resource_id).first()
         if card_to_edit:
-            deck = Deck.filter(Deck.id==card_to_edit.deck_id).first()
+            deck = Deck.query.filter(Deck.id==card_to_edit.deck_id).first()
             if deck and deck.user_id == user_id:
                 return True
         return False
@@ -98,9 +120,13 @@ def is_authorized_to_modify(user_id, *args,**kwargs): #check if user owns the re
         return True
     return False
 
-
-
-
+def resource_exists(resource_location, resource_id):
+    #This is since when we authorize we do need to check if the resource exists and we want to return 404 if it doesnt instead of 403. 
+    model_class = MODEL_MAP.get(resource_location.lower())
+    
+    if model_class:
+        return db.session.query(model_class).filter(model_class.id == resource_id).first()    #might need to be all for deletes where we are deleting many
+    return None
 
 
 
