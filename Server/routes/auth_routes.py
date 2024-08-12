@@ -16,16 +16,40 @@ def Login():
     user_info = request.get_json()     
     
     user = User.query.filter(User.username == user_info['username']).first()
+    
 
-    if 'refreshToken' in user_info:
+    # if 'refreshToken' in user_info:
+    #     #Check if refreshToken is Valid
+    #     #If Valid return an access Token
+    #     #if invalid return that to client so they can ask for auth
+    #     users_token = RefreshToken.query.filter(RefreshToken.user_id==user.id).first()
+    #     if users_token.token==user_info['refreshToken'] and users_token.is_valid():
+    #         jwt_token = issue_jwt_token(user.username,user.id)
+    #         user_dict = user.to_dict()
+    #         user_dict['accessToken'] = jwt_token
+    #         user_dict['refreshToken'] = users_token.token
+    #         response = make_response(jsonify(user_dict),201)
 
+    if user:
+        if 'refreshToken' in user_info:
         #Check if refreshToken is Valid
         #If Valid return an access Token
         #if invalid return that to client so they can ask for auth
-        issue_jwt_token()
-        pass
+            users_token = RefreshToken.query.filter(RefreshToken.user_id==user.id).first()
+            print(users_token.token)
+            print(type(users_token.token))
+            print(user_info['refreshToken'])
+            print(str(users_token.token)==user_info['refreshToken'])
+            if str(users_token.token)==user_info['refreshToken'] and users_token.is_valid():
+                jwt_token = issue_jwt_token(user.username,user.id)
+                user_dict = user.to_dict()
+                user_dict['accessToken'] = jwt_token
+                user_dict['refreshToken'] = users_token.token
+                response = make_response(jsonify(user_dict),201)
+                return response
+            else:
+                return 
 
-    if user:
         pass_match = user.authenticate(user_info['password'])
         if pass_match:
             #create JWT and refresh token

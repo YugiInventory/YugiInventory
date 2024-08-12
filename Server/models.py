@@ -23,7 +23,7 @@ class RefreshToken(db.Model, SerializerMixin):
 
 
     def is_valid(self):
-        return datetime.utcnow() < self.expiration_time
+        return datetime.datetime.now(datetime.timezone.utc) < self.expiration_time
 
     @staticmethod
     def issue_refresh_token(user_id):
@@ -39,7 +39,7 @@ class User(db.Model, SerializerMixin):
     id = db.Column(db.Integer, primary_key = True)
     username = db.Column(db.String, unique = True)
     _password_hash = db.Column(db.String) #hash after
-    email = db.Column(db.String) #encrypt?
+    email = db.Column(db.String, unique = True)
     
     profile = db.Column(db.String) #path to profile
     created_at = db.Column(db.DateTime(timezone=True), default= db.func.now())
@@ -58,6 +58,18 @@ class User(db.Model, SerializerMixin):
             return username
         raise ValueError
 
+    @validates('email')
+    def validate_email(self,key,email):
+        
+
+        if len(email) == 0:
+            raise ValueError
+        # if '@' not in email:
+        #     raise ValueError
+        if " " in email:
+            raise ValueError
+        return email
+    
     @hybrid_property 
     def password_hash(self):
         return self._password_hash
@@ -79,12 +91,8 @@ class User(db.Model, SerializerMixin):
 
     serialize_rules = ('-card_in_inventory.user','-user_decks.user','-card_in_inventory.card','-user_decks.card_in_deck','-refresh_token')
     
-    
-
-    #repr
 
   
-
 class Inventory(db.Model, SerializerMixin):
     __tablename__ = 'Inventories'
     #table columns 
@@ -170,6 +178,9 @@ class Card(db.Model, SerializerMixin):
 
 class Deck(db.Model, SerializerMixin):
     __tablename__ = 'Decks'
+    __table_args__ = (
+        db.UniqueConstraint('user_id','name'),
+    )
         #table columns
     id = db.Column(db.Integer, primary_key = True)
     name = db.Column(db.String)
