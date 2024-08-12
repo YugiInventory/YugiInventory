@@ -97,6 +97,8 @@ def edit_card_in_deck(user_id,**kwargs):
         response = bad_request_response()
     return response
 
+
+
 @cardinDeck_bp.route('/deleteCardinDeck', methods=["POST"])
 @token_required
 @authorize(is_authorized_to_modify, edit=True)
@@ -114,3 +116,13 @@ def delete_card_in_deck(user_id,**kwargs):
         db.session.rollback()
         response = server_error_response()
     return response 
+
+@cardinDeck_bp.route('/moveCardinDeck', methods=["POST"])
+@token_required
+@authorize(is_authorized_to_modify, edit=True)
+def move_card_in_deck(user_id,**kwargs):
+    #When moving a card you are reducing the value of 1 card and then creating a new card
+    #reducing the value can either be to 0 which is delete, or modify the value. 
+    #This might be needed to make sure the movemment of a card can all be done in 1 transaction
+    #removed the 
+    pass    
