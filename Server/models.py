@@ -9,13 +9,17 @@ from sqlalchemy.dialects.postgresql import UUID
 import datetime
 import uuid
 
+from sqlalchemy.sql import func
+
+
+
 from config import db, bcrypt
 
 class RefreshToken(db.Model, SerializerMixin):
     __tablename__ = 'RefreshTokens'
     id = db.Column(db.Integer, primary_key = True)
     token = db.Column(UUID(as_uuid=True))
-    expiration_time = db.Column(db.DateTime)
+    expiration_time = db.Column(db.DateTime()) #timezone=true, not sure if this necessary tbh
     #FK
     user_id = db.Column(db.Integer, db.ForeignKey('Users.id'), nullable=False, unique=True)
     
@@ -23,7 +27,8 @@ class RefreshToken(db.Model, SerializerMixin):
 
 
     def is_valid(self):
-        return datetime.datetime.now(datetime.timezone.utc) < self.expiration_time
+        return datetime.datetime.now() < self.expiration_time
+        #datetime.timezone.utc if I want to store timezone info and normalize it to utc
 
     @staticmethod
     def issue_refresh_token(user_id):
@@ -206,8 +211,9 @@ class Deck(db.Model, SerializerMixin):
 
 class CardinDeck(db.Model, SerializerMixin):
     __tablename__ = 'CardsinDecks'
+    __table__args__ = (db.UniqueConstraint('deck_id','card_id','location'),)
     id = db.Column(db.Integer, primary_key = True)
-    quantity = db.Column(db.Integer)
+    quantity = db.Column(db.Integer, nullable=False)
     location = db.Column(db.String)
     
     #foreignKeys

@@ -36,10 +36,7 @@ def Login():
         #If Valid return an access Token
         #if invalid return that to client so they can ask for auth
             users_token = RefreshToken.query.filter(RefreshToken.user_id==user.id).first()
-            print(users_token.token)
-            print(type(users_token.token))
-            print(user_info['refreshToken'])
-            print(str(users_token.token)==user_info['refreshToken'])
+
             if str(users_token.token)==user_info['refreshToken'] and users_token.is_valid():
                 jwt_token = issue_jwt_token(user.username,user.id)
                 user_dict = user.to_dict()
@@ -48,7 +45,8 @@ def Login():
                 response = make_response(jsonify(user_dict),201)
                 return response
             else:
-                return 
+                response = make_response({"Error":"Expired or invalid token login needed"},403)
+                return response
 
         pass_match = user.authenticate(user_info['password'])
         if pass_match:
