@@ -9,13 +9,17 @@ from sqlalchemy.dialects.postgresql import UUID
 import datetime
 import uuid
 
+from sqlalchemy.sql import func
+
+
+
 from config import db, bcrypt
 
 class RefreshToken(db.Model, SerializerMixin):
     __tablename__ = 'RefreshTokens'
     id = db.Column(db.Integer, primary_key = True)
     token = db.Column(UUID(as_uuid=True))
-    expiration_time = db.Column(db.DateTime)
+    expiration_time = db.Column(db.DateTime()) #timezone=true, not sure if this necessary tbh
     #FK
     user_id = db.Column(db.Integer, db.ForeignKey('Users.id'), nullable=False, unique=True)
     
@@ -23,7 +27,8 @@ class RefreshToken(db.Model, SerializerMixin):
 
 
     def is_valid(self):
-        return datetime.utcnow() < self.expiration_time
+        return datetime.datetime.now() < self.expiration_time
+        #datetime.timezone.utc if I want to store timezone info and normalize it to utc
 
     @staticmethod
     def issue_refresh_token(user_id):
@@ -39,7 +44,7 @@ class User(db.Model, SerializerMixin):
     id = db.Column(db.Integer, primary_key = True)
     username = db.Column(db.String, unique = True)
     _password_hash = db.Column(db.String) #hash after
-    email = db.Column(db.String) #encrypt?
+    email = db.Column(db.String, unique = True)
     
     profile = db.Column(db.String) #path to profile
     created_at = db.Column(db.DateTime(timezone=True), default= db.func.now())
@@ -58,6 +63,18 @@ class User(db.Model, SerializerMixin):
             return username
         raise ValueError
 
+    @validates('email')
+    def validate_email(self,key,email):
+        
+
+        if len(email) == 0:
+            raise ValueError
+        # if '@' not in email:
+        #     raise ValueError
+        if " " in email:
+            raise ValueError
+        return email
+    
     @hybrid_property 
     def password_hash(self):
         return self._password_hash
@@ -79,12 +96,8 @@ class User(db.Model, SerializerMixin):
 
     serialize_rules = ('-card_in_inventory.user','-user_decks.user','-card_in_inventory.card','-user_decks.card_in_deck','-refresh_token')
     
-    
-
-    #repr
 
   
-
 class Inventory(db.Model, SerializerMixin):
     __tablename__ = 'Inventories'
     #table columns 
@@ -107,7 +120,7 @@ class Inventory(db.Model, SerializerMixin):
     def validate_quantity(self,key,quantity):
         if int(quantity) >0:
             return quantity
-        raise ValueError
+        raise ValueError("Quantity must be greater than 0")
 
     #Serializer Rules
     serialize_rules = ('-user.card_in_inventory','-cardinSet.card_in_inventory','-card.releaseSet','-card.card_in_deck','-user.user_decks')  
@@ -170,6 +183,9 @@ class Card(db.Model, SerializerMixin):
 
 class Deck(db.Model, SerializerMixin):
     __tablename__ = 'Decks'
+    __table_args__ = (
+        db.UniqueConstraint('user_id','name'),
+    )
         #table columns
     id = db.Column(db.Integer, primary_key = True)
     name = db.Column(db.String)
@@ -185,6 +201,7 @@ class Deck(db.Model, SerializerMixin):
 
     #validations
     #Cards in a deck can not have more than 3 copies. 
+    #Deck names cannot be the same
 
     #Serializer Rules
     
@@ -194,8 +211,9 @@ class Deck(db.Model, SerializerMixin):
 
 class CardinDeck(db.Model, SerializerMixin):
     __tablename__ = 'CardsinDecks'
+    __table__args__ = (db.UniqueConstraint('deck_id','card_id','location'),)
     id = db.Column(db.Integer, primary_key = True)
-    quantity = db.Column(db.Integer)
+    quantity = db.Column(db.Integer, nullable=False)
     location = db.Column(db.String)
     
     #foreignKeys
@@ -224,7 +242,8 @@ class CardinDeck(db.Model, SerializerMixin):
         limits = {
             'main':60,
             'side':15,
-            'extra':15
+            'extra':15,
+            'max_count':3
         }
 
         
@@ -232,19 +251,22 @@ class CardinDeck(db.Model, SerializerMixin):
                 'main':0,
                 'side':0,
                 'extra':0,
+                'max_count': 0
         }     
-
         for val in deck.card_in_deck:
             #this gets every card_in_deck for the deck we are trying to insert into 
             count[val.location] += int(val.quantity)
+            if val.card_id == int(self.card_id):
+                count['max_count'] += int(val.quantity)
         
         #Now add the self quantity.
 
         count[self.location] += int(self.quantity)
+        count['max_count'] += int(self.quantity)
         #issue here is that on a patch request we have the card already in a card_in_deck so if i try to update from 1 to 2 this will read it as we already have 1 and now we are adding 2. This will break the validation. We should if we already have the card in the deck we should remove it form the list and just add the new quantity and see if that breaks it. Implement it in the morning im about to pass out. 
         for key in limits:
             if count[key] > limits[key]:
-                raise ValueError('Addition Exceeds Deck Size Limit')
+                raise ValueError('Addition Exceeds Limits')
     
     #Card in Deck event listener 
 
@@ -258,6 +280,7 @@ class CardinDeck(db.Model, SerializerMixin):
 
 def validate_card_in_deck_insert_deck(mapper,connection,target):
     print(target)
+    print('hahaxd')
     target.validate_self()
 
 event.listen(CardinDeck, 'before_insert',validate_card_in_deck_insert_deck)

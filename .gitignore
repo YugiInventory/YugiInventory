@@ -3,3 +3,4 @@ Server/config.py
 .pem
 .sql
 sk789-test.pem
+__pycache__/

@@ -97,4 +97,14 @@ const getUserId = async () => {
   }
 };
 
-export { loginInit, logout, clearTokens, storeTokens, getUserId };
+const isTokenExpired = () => {
+    let storedToken = SecureStore.getItem('accessToken');
+    if (storedToken){
+        const decoded = jwtDecode(storedToken);
+        const currentTime = Date.now()/1000; //Date.now returns milliseconds after epoch
+        return decoded.expiration < currentTime;
+    }
+    return false;
+}
+
+export { loginInit, logout, clearTokens, storeTokens, getUserId, isTokenExpired };
