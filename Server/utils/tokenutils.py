@@ -9,11 +9,14 @@ from models import RefreshToken , Card , CardinDeck , Deck , Inventory , User
 from utils.constants import MODEL_MAP
 
 
-
 def issue_jwt_token(username,user_id):
-    token = jwt.encode({'username':username,'user_id':user_id,'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=45)},app.config['SECRET_KEY'])            
+    token = jwt.encode(
+        {'username':username,
+         'user_id':user_id,
+         'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=45),
+         'iat': datetime.datetime.now(datetime.timezone.utc)
+         },app.config['SECRET_KEY'])            
     return token
-
 
 def invalidate_jwt_token():
     pass
