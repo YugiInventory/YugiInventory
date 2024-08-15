@@ -5,8 +5,11 @@ from sqlalchemy.exc import SQLAlchemyError
 from utils.tokenutils import token_required , authorize , is_authorized_to_modify , is_authorized_to_create
 from utils.server_responseutils import server_error_response , bad_request_response , item_not_found_response
 from utils.constants import ALLOWED_ATTRIBUTES
+from repo.deck_repo import DeckRepository
 from config import db
 from models import Deck , CardinDeck
+
+from pprint import pprint
 
 deck_bp = Blueprint('deck',__name__)
 
@@ -16,6 +19,42 @@ deck_bp = Blueprint('deck',__name__)
 def create_single_deck(user_id,**kwargs):
     
     data = request.get_json()
+
+    try:
+        name = data["name"]
+    except:
+        response = make_response({},400)
+        return response
+
+    repo = DeckRepository()
+    result = repo.create(user_id=user_id, name=name)
+    print(result)
+    if result.status == True:
+        print('I think i see the issue')
+        try:
+            db.session.commit()
+            response = make_response({'Success':'Deck created'},201)
+        except Exception as e:
+            #Figure out what the Error Class maybe
+            #Depending on the Error Class figure out which function to run
+            #That function will return 
+            print(e)
+            print(type(e))
+            pprint(vars(e))
+            pprint('fff')
+            response = make_response({},400)
+
+    else:
+        #Figure out what the Error Class maybe
+        #Depending on the Error Class figure out which function to run
+        #That function will return 
+
+        error_obj = result.return_data
+        pprint(vars(error_obj))
+        print(type(error_obj))
+        response = server_error_response()
+
+    return response
 
     try:
         new_deck = Deck(

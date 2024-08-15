@@ -1,13 +1,15 @@
 from abc import ABC , abstractmethod
+from collections import namedtuple
+
+OperationResult = namedtuple('OperationResult',['status','return_data'])
 
 class ReadWriteRepositoryInterface(ABC):
-
     def __init__(self, model):
         self.model = model
 
 
     @abstractmethod
-    def add():
+    def create():
         pass
 
     @abstractmethod
@@ -18,7 +20,11 @@ class ReadWriteRepositoryInterface(ABC):
     def delete():
         pass
         
-    def get_by_id(self,id):
+    def get_item_by_id(self,id):
+        q = self.get_query_by_id(id)
+        return q.first_or_404()
+    
+    def get_query_by_id(self,id):
         query = self.model.query.filter(self.model.id==id)
         return query
 
@@ -35,12 +41,12 @@ class ReadOnlyRepositoryInterface(ABC):
 
     def __init__(self, model):
         self.model = model
-
-    @abstractmethod
-    def get_by_id(self, id):
-        pass
-
-    def get_by_id(self,id):
+    
+    def get_item_by_id(self,id):
+        q = self.get_query_by_id(id)
+        return q.first_or_404()
+    
+    def get_query_by_id(self,id):
         query = self.model.query.filter(self.model.id==id)
         return query
 
@@ -51,3 +57,4 @@ class ReadOnlyRepositoryInterface(ABC):
     
     def paginate(self,query,page=1,per_page=20):
         return query.paginate(page=page, per_page=per_page)
+    

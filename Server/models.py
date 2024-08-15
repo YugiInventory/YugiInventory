@@ -200,6 +200,13 @@ class Deck(db.Model, SerializerMixin):
     card_in_deck = db.relationship('CardinDeck', backref = 'deck')
 
     #validations
+    @validates('name')
+    def validate_name(self,key,name):
+        print(len(name))
+        if len(str(name)) > 0:
+            return name
+        raise ValueError("Deck must have a name")
+
     #Cards in a deck can not have more than 3 copies. 
     #Deck names cannot be the same
 
