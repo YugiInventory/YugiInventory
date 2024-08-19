@@ -9,6 +9,9 @@ from repo.deck_repo import DeckRepository
 from config import db
 from models import Deck , CardinDeck
 
+from error_handling.error_class import ValidationError
+from sqlalchemy.exc import SQLAlchemyError
+
 from pprint import pprint
 
 deck_bp = Blueprint('deck',__name__)
@@ -17,86 +20,64 @@ deck_bp = Blueprint('deck',__name__)
 @token_required
 @authorize(is_authorized_to_create,edit=False)
 def create_single_deck(user_id,**kwargs):
-    
-    data = request.get_json()
-
     try:
+        data = request.get_json()
         name = data["name"]
-    except:
-        response = make_response({},400)
-        return response
-
-    repo = DeckRepository()
-    result = repo.create(user_id=user_id, name=name)
-    print(result)
-    if result.status == True:
-        print('I think i see the issue')
-        try:
-            db.session.commit()
-            response = make_response({'Success':'Deck created'},201)
-        except Exception as e:
-            #Figure out what the Error Class maybe
-            #Depending on the Error Class figure out which function to run
-            #That function will return 
-            print(e)
-            print(type(e))
-            pprint(vars(e))
-            pprint('fff')
-            response = make_response({},400)
-
-    else:
-        #Figure out what the Error Class maybe
-        #Depending on the Error Class figure out which function to run
-        #That function will return 
-
-        error_obj = result.return_data
-        pprint(vars(error_obj))
-        print(type(error_obj))
-        response = server_error_response()
-
-    return response
-
-    try:
-        new_deck = Deck(
-            isPublic = True,
-            user_id = user_id,
-            name = data['name']
-        )
-
-        db.session.add(new_deck)
-        db.session.commit()
-        response = make_response({'Sucess':'Deck Created'}, 201)
-    except SQLAlchemyError as se:
-        db.session.rollback()
-        print(se)
-        response = server_error_response()
-    except ValueError as ve:
-        db.session.rollback()
+        repo = DeckRepository()
+        new_deck = repo.create_and_commit(user_id=user_id, name=name)
+        response = make_response(jsonify(new_deck.to_dict()),201)
+    except ValidationError as ve:
         print(ve)
-        response = bad_request_response()
-    
+        print(ve.value)
+        print(ve.parameter)
+        response = make_response({"Validation Error":ve.message},400)
+    except SQLAlchemyError as se:
+        print(se)
+        print('lala')
+        response = server_error_response()
+    except Exception as e:
+        print(e)
+        return server_error_response()    
+
     return response
 
 @deck_bp.route('/editSingleDeck', methods=["PATCH"])
 @token_required
 @authorize(is_authorized_to_modify, edit=True)
 def edit_single_deck(user_id,**kwargs):
-    users_deck = kwargs['resource']
+    
     try:
-        for key,value in kwargs.items():  #only allow select keys to be modified as well
-            if hasattr(users_deck,key) and key in ALLOWED_ATTRIBUTES["Deck"]:
-                setattr(users_deck,key,value)
-        db.session.add(users_deck)
-        db.session.commit()
-        response = make_response({"Sucess":"Updated"},202)
-    except ValueError as ve:
-        print(ve)
-        db.session.rollback()
-        response = bad_request_response()
+        users_deck = kwargs['resource']
+        deck = DeckRepository()
+
+        updated_deck = deck.update_and_commit(params_dict=kwargs,deck=users_deck)
+        response = make_response(jsonify(updated_deck.to_dict()),202)
     except SQLAlchemyError as se:
         print(se)
-        db.session.rollback()
+        print('stop breaking the db')
         response = server_error_response()
+    except ValidationError as ve:
+        print('stop trying to fk it up')
+        print(ve)
+        response = server_error_response()
+    except Exception as e:
+        print('unhandled exception')
+        response = server_error_response()
+    # try:
+    #     for key,value in kwargs.items():  #only allow select keys to be modified as well
+    #         if hasattr(users_deck,key) and key in ALLOWED_ATTRIBUTES["Deck"]:
+    #             setattr(users_deck,key,value)
+    #     db.session.add(users_deck)
+    #     db.session.commit()
+    #     response = make_response({"Sucess":"Updated"},202)
+    # except ValueError as ve:
+    #     print(ve)
+    #     db.session.rollback()
+    #     response = bad_request_response()
+    # except SQLAlchemyError as se:
+    #     print(se)
+    #     db.session.rollback()
+    #     response = server_error_response()
     return response
 
 @deck_bp.route('/deleteSingleDeck', methods=['POST'])

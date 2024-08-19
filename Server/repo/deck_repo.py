@@ -1,4 +1,5 @@
 from .repository_interface import ReadWriteRepositoryInterface , OperationResult
+from utils.constants import ALLOWED_ATTRIBUTES
 from models import Deck
 from flask_sqlalchemy import SQLAlchemy
 from config import db
@@ -15,39 +16,38 @@ class DeckRepository(ReadWriteRepositoryInterface):
         super().__init__(Deck)
 
     def create(self, user_id, name , is_public=True):
-        try:
-            print('tryna make a deck')
-            new_deck = Deck(
-                name = name,
-                user_id = user_id,
-                isPublic = is_public
-            )
-            print('tryna add deck')
-            db.session.add(new_deck)
-            print('jaja')
-            return OperationResult(True, new_deck)
-        except Exception as e:
-            print('errr we here?')
-            db.session.rollback()
-            return OperationResult(False, e)
+        new_deck = Deck(
+            name = name,
+            user_id = user_id,
+            isPublic = is_public
+        )
+        db.session.add(new_deck)
+        return new_deck 
     
     def create_and_commit(self, user_id, name , is_public=True):
-        try:
-            new_deck = Deck(
-                name = name,
-                user_id = user_id,
-                isPublic = is_public
-            )
-            db.session.add(new_deck)
-            db.session.commit()
-            return OperationResult(True, new_deck)
-        except Exception as e:
-            db.session.rollback()
-            return OperationResult(False,e)
+        deck = self.create(user_id, name, is_public)
+        db.session.commit()
+        return deck
+
+    def update(self, params_dict ,deck=None): 
+        if deck is None:
+            try:
+                deck = self.get_item_by_id(params_dict["resource_id"]) 
+            except SQLAlchemyError as se:
+                print(se)                
+        for key, value in params_dict.items():
+            if hasattr(deck, key) and key in ALLOWED_ATTRIBUTES['Deck']:
+                setattr(deck,key, value)
+        db.session.add(deck)
+        return deck
+    
+    def update_and_commit(self, params_dict ,deck=None):
+        updated_deck = self.update(params_dict,deck)        
+        db.session.commit()
+        return updated_deck
 
     def delete():
         pass
 
-    def update():
+    def delete_and_commit():
         pass
-        

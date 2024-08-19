@@ -5,7 +5,7 @@ from flask import request , jsonify
 from config import app,db
 from functools import wraps
 
-from models import RefreshToken , Card , CardinDeck , Deck , Inventory , User
+from models import RefreshToken , CardinDeck , Deck , Inventory , User
 from utils.constants import MODEL_MAP
 
 
@@ -64,7 +64,7 @@ def authorize(check_func , edit=False):
                 resource_id = data.get("resource_id")
                 resource = resource_exists(resource_location,resource_id)
                 if not resource:
-                    return jsonify({"Error":"Resource does not exist"}),404
+                    return jsonify({"Error":"Resource does not existskibidibap"}),404
                 kwargs['resource'] = resource
             kwargs.update(data)
             if not check_func(user_id, *args, **kwargs):
@@ -134,7 +134,7 @@ def resource_exists(resource_location, resource_id):
 
 
 
-
+#Model Map will end up refrencing the repository objects instead of the model itself since the repository will handle getting the data
 
 
 

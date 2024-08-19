@@ -14,6 +14,7 @@ from sqlalchemy.sql import func
 
 
 from config import db, bcrypt
+from error_handling.error_class import ValidationError
 
 class RefreshToken(db.Model, SerializerMixin):
     __tablename__ = 'RefreshTokens'
@@ -61,18 +62,19 @@ class User(db.Model, SerializerMixin):
     def validate_quantity(self,key,username):
         if len(username) > 0:
             return username
-        raise ValueError
+        raise ValidationError(key,username)
 
     @validates('email')
     def validate_email(self,key,email):
         
+        invalid_char_list = []
 
         if len(email) == 0:
-            raise ValueError
+            raise ValidationError(key,email)
         # if '@' not in email:
         #     raise ValueError
         if " " in email:
-            raise ValueError
+            raise ValidationError(key,email)
         return email
     
     @hybrid_property 
@@ -120,7 +122,7 @@ class Inventory(db.Model, SerializerMixin):
     def validate_quantity(self,key,quantity):
         if int(quantity) >0:
             return quantity
-        raise ValueError("Quantity must be greater than 0")
+        raise ValidationError(key,quantity,"Quantity must be greater than 0")
 
     #Serializer Rules
     serialize_rules = ('-user.card_in_inventory','-cardinSet.card_in_inventory','-card.releaseSet','-card.card_in_deck','-user.user_decks')  
@@ -202,10 +204,9 @@ class Deck(db.Model, SerializerMixin):
     #validations
     @validates('name')
     def validate_name(self,key,name):
-        print(len(name))
         if len(str(name)) > 0:
             return name
-        raise ValueError("Deck must have a name")
+        raise ValidationError(key, value=name,message="Name cannot be len 0")
 
     #Cards in a deck can not have more than 3 copies. 
     #Deck names cannot be the same
@@ -234,7 +235,7 @@ class CardinDeck(db.Model, SerializerMixin):
     @validates('location')
     def validate_location(self,key,location):
         if location not in self.location_list:
-            raise ValueError('Invalid location')
+            raise ValidationError(key,location,'Invalid location')
         return location
 
     @validates('quantity')
@@ -273,7 +274,7 @@ class CardinDeck(db.Model, SerializerMixin):
         #issue here is that on a patch request we have the card already in a card_in_deck so if i try to update from 1 to 2 this will read it as we already have 1 and now we are adding 2. This will break the validation. We should if we already have the card in the deck we should remove it form the list and just add the new quantity and see if that breaks it. Implement it in the morning im about to pass out. 
         for key in limits:
             if count[key] > limits[key]:
-                raise ValueError('Addition Exceeds Limits')
+                raise ValidationError('quantity',self.quantity,'Adding card exceeds deck limits')
     
     #Card in Deck event listener 
 
