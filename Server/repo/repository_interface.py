@@ -1,5 +1,7 @@
 from abc import ABC , abstractmethod
 from collections import namedtuple
+from config import db
+from utils.constants import ALLOWED_ATTRIBUTES
 
 OperationResult = namedtuple('OperationResult',['status','return_data'])
 
@@ -12,13 +14,32 @@ class ReadWriteRepositoryInterface(ABC):
     def create():
         pass
 
-    @abstractmethod
-    def update():
-        pass
+    
+    def update(self, params_dict, resource=None):
+        if resource is None:
+            resource = self.get_item_by_id(params_dict['resource_id'])
+        for key, value in params_dict.items():
+            if hasattr(resource,key) and key in ALLOWED_ATTRIBUTES[self.model]:
+                setattr(resource,key,value)
+        db.session.add(resource)
+        return resource
 
-    @abstractmethod
-    def delete():
-        pass
+    def update_and_commit(self, params_dict, resource=None):
+        updated_resource = self.update(params_dict, resource)
+        db.session.commit()
+        return updated_resource
+
+    def delete(self,resource_id,resource=None):
+        if resource is None:
+            resource = self.get_item_by_id(resource_id)
+        db.session.delete(resource)
+        return
+
+    def delete_and_commit(self, resource_id,resource=None):
+        self.delete(resource_id,resource)
+        db.session.commit()
+        return
+
         
     def get_item_by_id(self,id):
         q = self.get_query_by_id(id)

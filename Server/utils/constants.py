@@ -2,10 +2,14 @@ from models import *
 
 
 ALLOWED_ATTRIBUTES = {
-    'User' : ['username', 'password', 'email'], 
-    'Inventory' : ['quantity' , 'isFirstEd'],
-    'Deck' : ['name'],
-    'CardinDeck' : ['quantity','location'],
+    User : {'username', 'password', 'email'}, 
+    Inventory : {'quantity' , 'isFirstEd'},
+    Deck : {'name'},
+    CardinDeck : {'quantity','location'},
+    User : {''}, 
+    Card : {}, 
+    ReleaseSet : {},
+
 }
 
 MODEL_MAP = {

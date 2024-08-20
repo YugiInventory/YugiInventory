@@ -1,4 +1,4 @@
-from .repository_interface import ReadWriteRepositoryInterface , OperationResult
+from .repository_interface import ReadWriteRepositoryInterface
 from utils.constants import ALLOWED_ATTRIBUTES
 from models import Deck
 from flask_sqlalchemy import SQLAlchemy
@@ -46,8 +46,3 @@ class DeckRepository(ReadWriteRepositoryInterface):
         db.session.commit()
         return updated_deck
 
-    def delete():
-        pass
-
-    def delete_and_commit():
-        pass
