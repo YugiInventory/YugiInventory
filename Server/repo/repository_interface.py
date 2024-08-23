@@ -48,7 +48,9 @@ class ReadWriteRepositoryInterface(ABC):
         query = self.model.query.filter(self.model.id==id)
         return query
 
-    def filter(self, base_query=None, *filters):
+    def filter(self, *filters,base_query=None):
+        print(filters)
+        print(base_query)
         query = base_query if base_query else self.model.query
         query = query.filter(*filters)
         return query

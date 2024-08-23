@@ -3,8 +3,9 @@ from sqlalchemy.exc import SQLAlchemyError
 
 #Local imports
 from utils.tokenutils import token_required , authorize , is_authorized_to_modify , is_authorized_to_create
-from utils.server_responseutils import paginate , server_error_response , bad_request_response, item_not_found_response
+from utils.server_responseutils import server_error_response , bad_request_response, item_not_found_response
 from utils.constants import ALLOWED_ATTRIBUTES
+from utils.flaskutils import get_filter_params
 from models import Card, CardinSet, Inventory
 from repo.inventory_repo import InventoryRepository
 from config import db
@@ -16,14 +17,10 @@ inventory_bp = Blueprint('inventory', __name__)
 @token_required
 def getinventory(user_id):
 
-    try:
-        filters = []
+    try:        
+        filters = get_filter_params(InventoryRepository, request.args)
         page = request.args.get('page',default=1, type=int)
         per_page = request.args.get('per_page',default=20,type=int)
-
-        for key,value in request.args.items():
-            if key in InventoryRepository.inventory_filters:
-                filters.append(InventoryRepository.inventory_filters[key](value))
 
         repo = InventoryRepository()
         query = repo.get_inventory_detailed(filters,user_id)
@@ -46,53 +43,17 @@ def getinventory(user_id):
         error_message = f'Error {e}'
         return make_response(jsonify({'error': error_message}), 500)
     return response
-
-    # filter_mapping = {
-    #     'name': lambda value: Card.name.contains(value) , #SQLalchemy binary expression type is the returnfrom lambda function
-    #     'card_code' : lambda value: CardinSet.card_code.contains(value),
-    #     'rarity' : lambda value: CardinSet.rarity.ilike(f'%{value}%'),
-    #     'card_type' : lambda value: Card.card_type.ilike(f'%{value}%'), 
-    # }
-
-    # skip_keys = ['page', 'per_page']
-    
-    # try:                
-    #     inventory_filtered_query = Inventory.query.filter(Inventory.user_id == user_id) #Base Query we need to add filter parameters
-        
-    #     for key, value in request.args.items():
-    #         if key in filter_mapping:
-    #             filter_element = filter_mapping[key](value)
-    #             inventory_filtered_query = inventory_filtered_query.filter(filter_element)
-
-    #     page = request.args.get('page', default=1,type=int)
-    #     per_page = request.args.get('per_page', default=20,type=int)
-    #     paginated_inventory = paginate(inventory_filtered_query,page,per_page)
-
-    #     card_list = [card.to_dict(rules=('-cardinSet.card.card_in_deck','-user','-cardinSet.releaseSet','-cardinSet.releaseSet.id''-cardinSet.card.card_on_banlist','-cardinSet.card')) for card in paginated_inventory.items]
-
-    #     response_data = {
-    #         'cards': card_list,
-    #         'page': page,
-    #         'per_page' : per_page,
-    #         'total_pages' : paginated_inventory.pages,
-    #         'total_items' : paginated_inventory.total
-    #         }
-    #     response = make_response(jsonify(response_data),200)
-    # except SQLAlchemyError as se:
-    #     error_message = f'Error w/ SQLAlchemy {se}'
-    #     return server_error_response()
-    # except Exception as e:
-    #     error_message = f'Error {e}'
-    #     return make_response(jsonify({'error': error_message}), 500)
     # return response
 
 @inventory_bp.route('/deleteUsersInventory', methods = ["DELETE"])
 @token_required
-@authorize(is_authorized_to_modify,edit=True)
+# @authorize(is_authorized_to_modify,edit=True)
 def delete_Inventory(user_id):  
-    #DELETE USERS INVENTORY ITEMS, this shouldnt need to cascade
+
     try:
-        db.session.query(Inventory).filter(Inventory.user_id==user_id).delete()
+        repo = InventoryRepository()
+        query = repo.filter(Inventory.user_id==user_id)
+        query.delete()
         db.session.commit()
         response = make_response({},204)
     except SQLAlchemyError as se:

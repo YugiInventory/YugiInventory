@@ -4,7 +4,7 @@ from config import db
 
 class InventoryRepository(ReadWriteRepositoryInterface):
 
-    inventory_filters = {
+    search_filters = {
 
         'isFirstEd' : lambda value: Inventory.isFirstEd==value,
         'name_partial' : lambda value: Card.name.contains(value),
@@ -12,8 +12,9 @@ class InventoryRepository(ReadWriteRepositoryInterface):
         'name_exact' : lambda value: Card.name==value,
         'rarity' : lambda value: CardinSet.rarity.ilike(f'%{value}%'),
         'card_type' : lambda value: Card.card_type.ilike(f'%{value}%'),
-
     }
+
+    ALLOWED_ATTRIBUTES = {'quantity','isFirstEd'}
 
     mappings = {
         'resource_id': 'CardinSet'
@@ -41,5 +42,5 @@ class InventoryRepository(ReadWriteRepositoryInterface):
 
     def get_inventory_detailed(self, filters,user_id):
         base_query = db.session.query(Inventory).filter(Inventory.user_id==user_id).outerjoin(CardinSet,Inventory.cardinSet_id==CardinSet.id).outerjoin(Card,CardinSet.card_id==Card.id)
-        filtered_query = self.filter(base_query, *filters)
+        filtered_query = self.filter(base_query=base_query, *filters)
         return filtered_query
