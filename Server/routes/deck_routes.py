@@ -49,8 +49,9 @@ def edit_single_deck(user_id,**kwargs):
     try:
         users_deck = kwargs['resource']
         deck = DeckRepository()
-
-        updated_deck = deck.update_and_commit(params_dict=kwargs,deck=users_deck)
+        print('ice cream')
+        updated_deck = deck.update_and_commit(params_dict=kwargs,resource=users_deck)
+        print('lala')
         response = make_response(jsonify(updated_deck.to_dict()),202)
     except SQLAlchemyError as se:
         print(se)
@@ -61,6 +62,7 @@ def edit_single_deck(user_id,**kwargs):
         print(ve)
         response = server_error_response()
     except Exception as e:
+        print(e)
         print('unhandled exception')
         response = server_error_response()
     # try:
@@ -107,27 +109,58 @@ def delete_single_deck(user_id,**kwargs):
 @token_required
 def get_users_decks(user_id):
 
-    filter_mapping = {
-        'user_id' : lambda value: Deck.user_id==value,
-        'name' : lambda value: Deck.name.ilike(f'%{value}%'),
-        'id' : lambda value: Deck.id==value
-    }
     try:
-        filter_elements = []
+        filters = []
+        page = request.args.get('page', default=1, type=int)
+        per_page = request.args.get('per_page',default=20,type=int)
+
         for key,value in request.args.items():
-            filter_element = filter_mapping[key](value)
-            filter_elements.append(filter_element)
-        deck_lists = Deck.query.filter(*filter_elements).all()
-        deck_list = [deck.to_dict(rules=('-card_in_deck','-user')) for deck in deck_lists]
-        response = make_response(jsonify(deck_list),200)
+            if key in DeckRepository.filter_mapping:
+                filters.append(DeckRepository.filter_mapping[key](value))
+        
+        repo = DeckRepository()
+        query = repo.filter(*filters)
+        paginated_results = repo.paginate(query)
+
+        deck_list = [deck.to_dict(rules=('-card_in_deck','-user')) for deck in paginated_results.items()]
+        response_data = {
+            'decks' : deck_list,
+            'page' : page, 
+            'per_page' : per_page,
+            'total_pages' : paginated_results.pages,
+            'total_items' : paginated_results.total
+        }
+        response = make_response(jsonify(response_data),200)
     except SQLAlchemyError as se:
-        db.session.rollback()
         print(se)
         response = server_error_response()
     except KeyError as ke:
         print(ke)
-        db.session.rollback()
-        response = bad_request_response()
+    except Exception as e:
+        print(e)
+        response = server_error_response()
+
+    # filter_mapping = {
+    #     'user_id' : lambda value: Deck.user_id==value,
+    #     'name' : lambda value: Deck.name.ilike(f'%{value}%'),
+    #     'id' : lambda value: Deck.id==value
+    # }
+    # try:
+    #     filter_elements = []
+    #     for key,value in request.args.items():
+    #         filter_element = filter_mapping[key](value)
+    #         filter_elements.append(filter_element)
+    #     deck_lists = Deck.query.filter(*filter_elements).all()
+    #     deck_list = [deck.to_dict(rules=('-card_in_deck','-user')) for deck in deck_lists]
+    #     response = make_response(jsonify(deck_list),200)
+    # except SQLAlchemyError as se:
+    #     db.session.rollback()
+    #     print(se)
+    #     response = server_error_response()
+    # except KeyError as ke:
+    #     print(ke)
+    #     db.session.rollback()
+    #     response = bad_request_response()
     return response
 
 @deck_bp.route('/getSingleDeckCardInfo/<int:deck_id>', methods =['GET'])

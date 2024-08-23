@@ -22,8 +22,8 @@ def get_all_cards():
         per_page = request.args.get('per_page',default=20,type=int)
 
         for key, value in request.args.items():
-            if key in CardRepository.card_filter_mapping:
-                filters.append(CardRepository.card_filter_mapping[key](value))
+            if key in CardRepository.card_filters:
+                filters.append(CardRepository.card_filters[key](value))
         
         repo = CardRepository()
         query = repo.filter(*filters)
@@ -52,7 +52,6 @@ def get_all_cards():
 @cards_bp.route('/getSingleCard/<int:card_id>')
 def get_single_card_id(card_id):
     repo = CardRepository()
-    # card_info= repo.get_by_id(card_id).first()
     card_info = repo.get_item_by_id(card_id)    
     if card_info:
         response = make_response(jsonify(card_info.to_dict(rules=('-card_in_deck','-card_in_set.card_in_inventory','-card_on_banlist'))),200)

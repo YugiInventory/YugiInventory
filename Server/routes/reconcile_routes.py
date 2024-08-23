@@ -12,10 +12,7 @@ reconcile_bp = Blueprint('reconcile',__name__)
 @reconcile_bp.route('/reconcileInventory' ,methods=["POST"])
 @token_required
 def reconcile_selected_decks_with_inventory(user_id):
-    
     deck_list = request.get_json()
-    print(deck_list)
-    print('lala')
     base = db.session.query(Inventory)
     invent = base.filter(Inventory.user_id==user_id).outerjoin(CardinSet,Inventory.cardinSet_id==CardinSet.id).outerjoin(Card,CardinSet.card_id==Card.id)
 

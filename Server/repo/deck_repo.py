@@ -8,7 +8,6 @@ from sqlalchemy.exc import SQLAlchemyError
 class DeckRepository(ReadWriteRepositoryInterface):
     
     filter_mapping = {
-        'user_id' : lambda value: Deck.user_id==value,
         'name' : lambda value: Deck.name.ilike(f'%{value}%'),
     }
 
@@ -29,20 +28,23 @@ class DeckRepository(ReadWriteRepositoryInterface):
         db.session.commit()
         return deck
 
-    def update(self, params_dict ,deck=None): 
-        if deck is None:
-            try:
-                deck = self.get_item_by_id(params_dict["resource_id"]) 
-            except SQLAlchemyError as se:
-                print(se)                
-        for key, value in params_dict.items():
-            if hasattr(deck, key) and key in ALLOWED_ATTRIBUTES['Deck']:
-                setattr(deck,key, value)
-        db.session.add(deck)
-        return deck
+    # def update(self, params_dict ,deck=None): 
+    #     print(params_dict)
+    #     print(deck)
+    #     if deck is None:
+    #         try:
+    #             deck = self.get_item_by_id(params_dict["resource_id"]) 
+    #         except SQLAlchemyError as se:
+    #             print(se)                
+    #     for key, value in params_dict.items():
+    #         if hasattr(deck, key) and key in ALLOWED_ATTRIBUTES['Deck']:
+    #             setattr(deck,key, value)
+    #             print(f'We have set the {key} to {value}')
+    #     db.session.add(deck)
+    #     return deck
     
-    def update_and_commit(self, params_dict ,deck=None):
-        updated_deck = self.update(params_dict,deck)        
-        db.session.commit()
-        return updated_deck
+    # def update_and_commit(self, params_dict ,deck=None):
+    #     updated_deck = self.update(params_dict,deck)        
+    #     db.session.commit()
+    #     return updated_deck
 

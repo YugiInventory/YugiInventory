@@ -241,8 +241,10 @@ class CardinDeck(db.Model, SerializerMixin):
     @validates('quantity')
     def validate_quantity(self,key,quantity):
         if  0 < int(quantity) <=3:
+            print(quantity)
+            print('>>>')
             return quantity
-        raise ValueError
+        raise ValidationError(key,quantity,'Invalid quantity?')
     
     def validate_self(self):
         location = self.location

@@ -3,6 +3,7 @@
 
 class ValidationError(Exception):
     def __init__(self, parameter, value, message="Invalid value"):
+        
         self.parameter = parameter
         self.value = value
 

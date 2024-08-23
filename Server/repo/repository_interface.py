@@ -39,7 +39,6 @@ class ReadWriteRepositoryInterface(ABC):
         self.delete(resource_id,resource)
         db.session.commit()
         return
-
         
     def get_item_by_id(self,id):
         q = self.get_query_by_id(id)
@@ -49,8 +48,8 @@ class ReadWriteRepositoryInterface(ABC):
         query = self.model.query.filter(self.model.id==id)
         return query
 
-    def filter(self, *filters):
-        query = self.model.query
+    def filter(self, base_query=None, *filters):
+        query = base_query if base_query else self.model.query
         query = query.filter(*filters)
         return query
     
@@ -71,8 +70,8 @@ class ReadOnlyRepositoryInterface(ABC):
         query = self.model.query.filter(self.model.id==id)
         return query
 
-    def filter(self, *filters):
-        query = self.model.query
+    def filter(self, base_query=None, *filters):
+        query = base_query if base_query else self.model.query
         query = query.filter(*filters)
         return query
     

@@ -6,7 +6,12 @@ from config import db
 from sqlalchemy.exc import SQLAlchemyError
 
 class CardinDeckRepository(ReadWriteRepositoryInterface):
-
+    card_filters = {
+        'card_id' : lambda value: CardinDeck.card_id==value,
+        'location' : lambda value: CardinDeck.location==value,
+        'deck_id' : lambda value: CardinDeck.deck_id==value,
+    }
+    
     def __init__(self):
         super().__init__(CardinDeck)
     
@@ -25,21 +30,21 @@ class CardinDeckRepository(ReadWriteRepositoryInterface):
         db.session.commit()
         return new_cardinDeck
 
-    def update(self, params_dict, cardinDeck = None):
-        if cardinDeck is None:
-            try:
-                cardinDeck = self.get_item_by_id(params_dict["resource_id"])
-            except SQLAlchemyError as se:
-                print(se)
-        for key,value in params_dict.items():
-            if hasattr(cardinDeck,key) and key in ALLOWED_ATTRIBUTES['CardinDeck']:
-                setattr(cardinDeck,key,value)
-        db.session.add(cardinDeck)
-        return cardinDeck
+    # def update(self, params_dict, cardinDeck = None):
+    #     if cardinDeck is None:
+    #         try:
+    #             cardinDeck = self.get_item_by_id(params_dict["resource_id"])
+    #         except SQLAlchemyError as se:
+    #             print(se)
+    #     for key,value in params_dict.items():
+    #         if hasattr(cardinDeck,key) and key in ALLOWED_ATTRIBUTES['CardinDeck']:
+    #             setattr(cardinDeck,key,value)
+    #     db.session.add(cardinDeck)
+    #     return cardinDeck
 
-    def update_and_commit(self, params_dict, cardinDeck=None):
-        updated_cardinDeck = self.update(params_dict,cardinDeck)
-        db.session.commit()
-        return updated_cardinDeck
+    # def update_and_commit(self, params_dict, cardinDeck=None):
+    #     updated_cardinDeck = self.update(params_dict,cardinDeck)
+    #     db.session.commit()
+    #     return updated_cardinDeck
 
 
