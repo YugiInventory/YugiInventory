@@ -6,8 +6,11 @@ from utils.tokenutils import token_required , authorize , is_authorized_to_modif
 from utils.server_responseutils import server_error_response , bad_request_response , item_not_found_response
 from utils.constants import ALLOWED_ATTRIBUTES
 from repo.deck_repo import DeckRepository
+from repo.card_in_deck_repo import CardinDeckRepository
+from utils.flaskutils import get_filter_params
 from config import db
 from models import Deck , CardinDeck
+
 
 from error_handling.error_class import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
@@ -49,9 +52,7 @@ def edit_single_deck(user_id,**kwargs):
     try:
         users_deck = kwargs['resource']
         deck = DeckRepository()
-        print('ice cream')
         updated_deck = deck.update_and_commit(params_dict=kwargs,resource=users_deck)
-        print('lala')
         response = make_response(jsonify(updated_deck.to_dict()),202)
     except SQLAlchemyError as se:
         print(se)
@@ -86,17 +87,18 @@ def edit_single_deck(user_id,**kwargs):
 @token_required
 @authorize(is_authorized_to_modify, edit=True)
 def delete_single_deck(user_id,**kwargs):
-    deck_to_delete = kwargs["resource_id"]
-    
-    #needs to delete all the cards in that deck as well. 
-    
-    #Replaced with CardinDeck access function
-    cards_in_deck = CardinDeck.query.filter(CardinDeck.deck_id==deck_to_delete.id).all() 
 
     try:
-        for single_card in cards_in_deck:
-            db.session.delete(single_card)
-        db.session.delete(deck_to_delete)
+        deck_to_delete = kwargs["resource"]
+        deck_repo = DeckRepository()
+        cardinDeck_repo = CardinDeckRepository()
+
+        cards_in_deck_query = cardinDeck_repo.filter(CardinDeck.deck_id==deck_to_delete.id)
+        card_list = cards_in_deck_query.all()
+
+        for card in card_list:
+            cardinDeck_repo.delete(resource=card)
+        deck_repo.delete(resource=deck_to_delete)
         db.session.commit()
         response = make_response({},204)
     except SQLAlchemyError as se:
@@ -108,15 +110,10 @@ def delete_single_deck(user_id,**kwargs):
 @deck_bp.route('/getUsersDecks' , methods=["GET"])
 @token_required
 def get_users_decks(user_id):
-
     try:
-        filters = []
+        filters = get_filter_params(DeckRepository, request.args)
         page = request.args.get('page', default=1, type=int)
         per_page = request.args.get('per_page',default=20,type=int)
-
-        for key,value in request.args.items():
-            if key in DeckRepository.filter_mapping:
-                filters.append(DeckRepository.filter_mapping[key](value))
         
         repo = DeckRepository()
         query = repo.filter(*filters)
@@ -177,3 +174,8 @@ def get_single_deck_card_info(deck_id):
     else:
         response = item_not_found_response()
     return response
+
+@deck_bp.route('/createDeckFromYDK', methods=["POST"])
+@token_required
+def ydk_to_deck(user_id):
+    pass

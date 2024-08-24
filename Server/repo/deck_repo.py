@@ -7,7 +7,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 class DeckRepository(ReadWriteRepositoryInterface):
     
-    filter_mapping = {
+    search_filters = {
         'name' : lambda value: Deck.name.ilike(f'%{value}%'),
     }
 

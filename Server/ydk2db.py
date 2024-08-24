@@ -14,7 +14,7 @@ def process_file(file=None,filepath=None):
 
 def ydk_to_dict(file_content):
     #Assume we have the content for the file currently
-
+    #YDK file has leading 0's, tcg api does not have leading and trailing 0's
 
     main_deck = {}
     side_deck = {}
@@ -34,10 +34,10 @@ def ydk_to_dict(file_content):
 
         elif line and line.isdigit():
             if current_dict is not None:
-                if line in current_dict:
-                    current_dict[line] +=1 
+                if int(line) in current_dict:
+                    current_dict[int(line)] +=1 
                 else:
-                    current_dict[line] = 1
+                    current_dict[int(line)] = 1
     
     print(main_deck)
     print(side_deck)
@@ -64,12 +64,13 @@ def deck_dictionary_to_db_objs(deck_dict, deck_id):
         location = key
         for ygo_pro_card_id , quantity in cards_in_location.items():
             if ygo_pro_card_id in ygproid_to_dbid:
-                cards_db_id = ygproid_to_dbid['card_id']
+                cards_db_id = ygproid_to_dbid[ygo_pro_card_id]
             else:
-                card = Card.query.filter(Card.yg_pro_id==ygo_pro_card_id).first()
+                card = Card.query.filter(Card.yg_pro_id==str(ygo_pro_card_id)).first()
 
                 if card is None:
                     missing_cards.append(ygo_pro_card_id)
+                    continue
 
                 cards_db_id = card.id
                 ygproid_to_dbid[ygo_pro_card_id] = cards_db_id
@@ -85,10 +86,16 @@ def deck_dictionary_to_db_objs(deck_dict, deck_id):
     print(new_cards)
     return new_cards
 
+def commit_new_cards(card_list):
+    db.session.add_all(card_list)
+    db.session.commit()
+
+
 if __name__ == "__main__":
     with app.app_context():
-        file_path = '/home/shamsk/Dev/YugiInventory/Server/Edison- borg frog.ydk'
+        file_path = '/home/shamsk/Dev/YugiInventory/Server/test_decks/Edison- Dark Plant.ydk'
 
         file_content = process_file(filepath=file_path)
         deck_output = ydk_to_dict(file_content)
-        deck_dictionary_to_db_objs(deck_dict=deck_output, deck_id=5)
+        new_cards = deck_dictionary_to_db_objs(deck_dict=deck_output, deck_id=46)
+        commit_new_cards(new_cards)

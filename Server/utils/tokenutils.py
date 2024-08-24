@@ -13,7 +13,7 @@ def issue_jwt_token(username,user_id):
     token = jwt.encode(
         {'username':username,
          'user_id':user_id,
-         'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=45),
+         'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=240),
          'iat': datetime.datetime.now(datetime.timezone.utc)
          },app.config['SECRET_KEY'])            
     return token

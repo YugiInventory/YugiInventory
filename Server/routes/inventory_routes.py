@@ -1,5 +1,6 @@
 from flask import Blueprint, make_response , jsonify , request
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.exc import SQLAlchemyError , IntegrityError
+from psycopg2.errors import UniqueViolation
 
 #Local imports
 from utils.tokenutils import token_required , authorize , is_authorized_to_modify , is_authorized_to_create
@@ -165,8 +166,19 @@ def edit_card_in_inventory(user_id, **kwargs):
         print(ve)
         print('this happened?')
         response = bad_request_response()
+    # except IntegrityError as ie: 
+    #     #This scenario is 
+    #     print(ie)
+    #     print(ie.orig)
+    #     print(type(ie.orig))
+    #     print('fdasfa')
+    #     db.session.rollback()
+    #     response = bad_request_response()
     except SQLAlchemyError as se:
+        print(se.__class__)
         print(se)
+        print('xd')
+        print(se.orig)
         db.session.rollback()
         response = server_error_response()
     return response

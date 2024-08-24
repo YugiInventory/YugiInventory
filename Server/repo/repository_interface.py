@@ -29,13 +29,15 @@ class ReadWriteRepositoryInterface(ABC):
         db.session.commit()
         return updated_resource
 
-    def delete(self,resource_id,resource=None):
+    def delete(self,resource_id=None,resource=None):
         if resource is None:
+            if resource_id is None:
+                raise ValueError("I need something cmon man")
             resource = self.get_item_by_id(resource_id)
         db.session.delete(resource)
         return
 
-    def delete_and_commit(self, resource_id,resource=None):
+    def delete_and_commit(self, resource_id=None,resource=None):
         self.delete(resource_id,resource)
         db.session.commit()
         return
