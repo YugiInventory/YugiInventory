@@ -27,7 +27,7 @@ const Inventory = () => {
   useEffect(() => {
     const fetchCards = async () => {
       try {
-        const response = await fetch(`${BASE_URL}/cards`);
+        const response = await fetch(`${BASE_URL}/cards/getAllCards`);
         const data = await response.json();
         // console.log(data);
         setAllCards(data);
