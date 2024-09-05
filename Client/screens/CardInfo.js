@@ -3,7 +3,7 @@ import { useState } from "react";
 import BASE_URL from "../config";
 
 const CardInfo = () => {
-  const randomCard = async () => {
+  const generateCard = async () => {
     try {
       const response = await fetch(`${BASE_URL}/cards/getSingleCard/10`)
         .then((response) => response.json())
@@ -14,7 +14,7 @@ const CardInfo = () => {
   };
   return (
     <View>
-      <Button title="Get Information" onPress={() => randomCard()} />
+      <Button title="Get Information" onPress={() => generateCard()} />
     </View>
   );
 };

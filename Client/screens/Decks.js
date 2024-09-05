@@ -11,39 +11,131 @@ const mainDeck = [
   <CardInfo />,
   <CardInfo />,
   <CardInfo />,
+  <CardInfo />,
+  <CardInfo />,
+  <CardInfo />,
+  <CardInfo />,
+  <CardInfo />,
+  <CardInfo />,
+  <CardInfo />,
+  <CardInfo />,
+  <CardInfo />,
+  <CardInfo />,
+  <CardInfo />,
+  <CardInfo />,
+  <CardInfo />,
+  <CardInfo />,
+  <CardInfo />,
+  <CardInfo />,
+  <CardInfo />,
+  <CardInfo />,
+  <CardInfo />,
+  <CardInfo />,
+  <CardInfo />,
+  <CardInfo />,
+  <CardInfo />,
+  <CardInfo />,
+  <CardInfo />,
+  <CardInfo />,
+  <CardInfo />,
+  <CardInfo />,
+  <CardInfo />,
+  <CardInfo />,
+  <CardInfo />,
 ];
 
+const sideDeck = [
+  <CardInfo />,
+  <CardInfo />,
+  <CardInfo />,
+  <CardInfo />,
+  <CardInfo />,
+  <CardInfo />,
+  <CardInfo />,
+  <CardInfo />,
+  <CardInfo />,
+  <CardInfo />,
+  <CardInfo />,
+  <CardInfo />,
+  <CardInfo />,
+  <CardInfo />,
+  <CardInfo />,
+];
+
+const extraDeck = [
+  <CardInfo />,
+  <CardInfo />,
+  <CardInfo />,
+  <CardInfo />,
+  <CardInfo />,
+  <CardInfo />,
+  <CardInfo />,
+  <CardInfo />,
+  <CardInfo />,
+  <CardInfo />,
+  <CardInfo />,
+  <CardInfo />,
+  <CardInfo />,
+  <CardInfo />,
+  <CardInfo />,
+];
 const numColumns = 5;
 
-const Table = () => {
-  const renderItem = ({ item }) => {
-    return (
-      <View style={styles.itemContainer}>
-        <Text style={styles.itemText}>{item}</Text>
-      </View>
-    );
-  };
-
+const renderItem = ({ item }) => {
   return (
-    <FlatList
-      data={mainDeck}
-      renderItem={renderItem}
-      keyExtractor={(item, index) => index.toString()}
-      numColumns={numColumns}
-      columnWrapperStyle={styles.row}
-    />
+    <View style={styles.itemContainer}>
+      <Text style={styles.itemText}>{item}</Text>
+    </View>
   );
+
+  // const Table = () => {
+  //   const renderItem = ({ item }) => {
+  //     return (
+  //       <View style={styles.itemContainer}>
+  //         <Text style={styles.itemText}>{item}</Text>
+  //       </View>
+  //     );
+  //   };
+
+  //   return (
+  //     <FlatList
+  //       data={mainDeck}
+  //       renderItem={renderItem}
+  //       keyExtractor={(item, index) => index.toString()}
+  //       numColumns={numColumns}
+  //       columnWrapperStyle={styles.row}
+  //     />
+  //   );
 };
 
 const Decks = () => {
   return (
     <View style={styles.container}>
       <View>
-        <Text>Main</Text>
-        <Table />
-      </View>
-      <View>
-        <Text>Side</Text>
+        <Text>Main Deck: {mainDeck.length}</Text>
+        <FlatList
+          data={mainDeck}
+          renderItem={renderItem}
+          keyExtractor={(item, index) => index.toString()}
+          numColumns={numColumns}
+          columnWrapperStyle={styles.row}
+        />
+        <Text>Side Deck: {sideDeck.length}</Text>
+        <FlatList
+          data={sideDeck}
+          renderItem={renderItem}
+          keyExtractor={(item, index) => index.toString()}
+          numColumns={numColumns}
+          columnWrapperStyle={styles.row}
+        />
+        <Text>Extra Deck: {extraDeck.length}</Text>
+        <FlatList
+          data={extraDeck}
+          renderItem={renderItem}
+          keyExtractor={(item, index) => index.toString()}
+          numColumns={numColumns}
+          columnWrapperStyle={styles.row}
+        />
       </View>
     </View>
   );
