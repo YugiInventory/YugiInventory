@@ -10,7 +10,8 @@ import {
   loginInit,
   getUserId,
 } from "../services/AuthFunctions";
-import Inventory from "./Inventory";
+
+import PaginationBar from "../services/Pagination";
 
 const Login = () => {
   const [username, setUsername] = useState("");
@@ -120,6 +121,7 @@ const Login = () => {
         />
         <TextInput placeholder="enter email" onChangeText={setcreateEmail} />
         <Button title="Create Account" onPress={handleCreateAccount} />
+        <PaginationBar currentPage={1}></PaginationBar>
       </View>
     </View>
   );

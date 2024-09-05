@@ -16,6 +16,10 @@ from error_handling.error_class import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
 
 from pprint import pprint
+import logging
+logging.basicConfig()
+logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+
 
 deck_bp = Blueprint('deck',__name__)
 
@@ -164,10 +168,16 @@ def get_users_decks(user_id):
 def get_single_deck_card_info(deck_id):
 
     #Replace with access functions 
-    single_deck = Deck.query.filter(Deck.id==deck_id).first()
+    deck_repo = DeckRepository()
+    single_deck = deck_repo.get_deck_and_minimal_card_info(deck_id)
+
+
+    # single_deck = Deck.query.filter(Deck.id==deck_id).first()
+
+
     if single_deck:
         try:
-            response = make_response(jsonify(single_deck.to_dict()),200)
+            response = make_response(jsonify(single_deck.to_dict()),200)  #single_deck.to_dict()
         except SQLAlchemyError as se:
             print(se)
             response = server_error_response()

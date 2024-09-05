@@ -68,6 +68,8 @@ def delete_Inventory(user_id):
 @token_required
 @authorize(is_authorized_to_create,edit=False)
 def add_single_card_to_inventory(user_id, **kwargs):
+
+    
     #Addition still needs to check for existance here
     #Check if resource_exists
     try:

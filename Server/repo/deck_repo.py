@@ -1,9 +1,10 @@
 from .repository_interface import ReadWriteRepositoryInterface
 from utils.constants import ALLOWED_ATTRIBUTES
-from models import Deck
+from models import Deck , Card , CardinDeck
 from flask_sqlalchemy import SQLAlchemy
 from config import db
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import joinedload, load_only
 
 class DeckRepository(ReadWriteRepositoryInterface):
     
@@ -27,6 +28,11 @@ class DeckRepository(ReadWriteRepositoryInterface):
         deck = self.create(user_id, name, is_public)
         db.session.commit()
         return deck
+
+    def get_deck_and_minimal_card_info(self, deck_id):
+        single_deck = db.session.query(Deck).options(joinedload(Deck.card_in_deck).load_only(CardinDeck.card_id, CardinDeck.location)).filter(Deck.id==deck_id).first()
+        return single_deck
+
 
     # def update(self, params_dict ,deck=None): 
     #     print(params_dict)
