@@ -3,7 +3,6 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import MetaData, event
 from sqlalchemy.orm import validates
 from sqlalchemy.ext.associationproxy import association_proxy
-from sqlalchemy_serializer import SerializerMixin
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.dialects.postgresql import UUID
 import datetime
@@ -168,9 +167,8 @@ class Card(db.Model, SerializerMixin):
     
     #relationships
     
-    card_in_deck = db.relationship("CardinDeck",backref = "card") 
-    
-    card_on_banlist = db.relationship('BanlistCard',backref='card')
+    card_in_deck = db.relationship("CardinDeck",backref = "card")     
+    # card_on_banlist = db.relationship('BanlistCard',backref='card')
 
     card_in_set = db.relationship('CardinSet', backref = 'card')
     
@@ -335,7 +333,8 @@ class CardinSet(db.Model,SerializerMixin):
     card_id = db.Column(db.Integer, db.ForeignKey('Cards.id'))
 
     #relationships
-    card_in_inventory = db.relationship("Inventory" , backref = "cardinSet") 
+    card = db.relationship("Card",backref='card_in_sets')
+    # card_in_inventory = db.relationship("Inventory" , backref = "cardinSet") 
 
 
     #Validations

@@ -8,8 +8,21 @@ import { View,Text, Button } from "react-native";
 // That can either be in the form of an API call, querying the local DB, etc.
 // It would have to be buttons saying +1, -1, Last, First, Jump to 
 
-async function getPageDatafromAPI(path,newPage){
+function createAPIURL(base_url,filter_obj){
+    //return the path 
+    const url = URL(base_url);
+    Object.entries(filter_obj).forEach(([key,value]) => {
+        if (value!==undefined && value!==null){
+            url.searchParams.append(key,value)
+        }
+    })
+    console.log(url.toString())
+    return url.toString()
+}
 
+
+async function getPageDatafromAPI(path,newPage){
+    access_token = ''
     try {
         const resp = await fetch(`${path}&page=${newPage}`);
         if (resp.ok) {

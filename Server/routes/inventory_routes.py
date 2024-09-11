@@ -15,6 +15,7 @@ from config import db
 inventory_bp = Blueprint('inventory', __name__)
 
 
+
 @inventory_bp.route('/getUserInventory', methods = ["GET"])
 @token_required
 def getinventory(user_id):
@@ -39,9 +40,11 @@ def getinventory(user_id):
         
         response = make_response(jsonify(response_data),200)
     except SQLAlchemyError as se:
+        print(se)
         error_message = f'Error w/ SQLAlchemy {se}'
         return server_error_response()
     except Exception as e:
+        print(e)
         error_message = f'Error {e}'
         return make_response(jsonify({'error': error_message}), 500)
     return response
