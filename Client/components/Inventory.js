@@ -9,9 +9,8 @@ import {
   Button,
   TextInput,
 } from "react-native";
-import BASE_URL from "../config";
 import { cardSearch } from "../utility";
-import { login } from "../services/AuthFunctions";
+import { login, BASE_URL_ } from "../services/AuthFunctions";
 import PaginationBar from "../services/Pagination";
 
 const Inventory = () => {

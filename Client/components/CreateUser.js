@@ -1,6 +1,6 @@
 import { Text, View, TextInput, Button, Alert, StyleSheet } from "react-native";
 import { useForm, Controller } from "react-hook-form";
-import { BASE_URL } from "../config";
+import { BASE_URL_ } from "../services/AuthFunctions";
 
 const CreateUser = () => {
   const {

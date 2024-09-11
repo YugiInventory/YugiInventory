@@ -1,9 +1,9 @@
 import * as SecureStore from "expo-secure-store";
 import jwtDecode from "jwt-decode";
 
-const BASE_URL_ =
+export const BASE_URL_ =
   "http://ec2-3-135-192-227.us-east-2.compute.amazonaws.com:8000/";
-const BASE_URL = "http://127.0.0.1:5555/";
+export const BASE_URL = "http://127.0.0.1:5555/";
 
 const storeTokens = async (accessToken, refreshToken) => {
   try {
@@ -98,13 +98,20 @@ const getUserId = async () => {
 };
 
 const isTokenExpired = () => {
-    let storedToken = SecureStore.getItem('accessToken');
-    if (storedToken){
-        const decoded = jwtDecode(storedToken);
-        const currentTime = Date.now()/1000; //Date.now returns milliseconds after epoch
-        return decoded.expiration < currentTime;
-    }
-    return false;
-}
+  let storedToken = SecureStore.getItem("accessToken");
+  if (storedToken) {
+    const decoded = jwtDecode(storedToken);
+    const currentTime = Date.now() / 1000; //Date.now returns milliseconds after epoch
+    return decoded.expiration < currentTime;
+  }
+  return false;
+};
 
-export { loginInit, logout, clearTokens, storeTokens, getUserId, isTokenExpired };
+export {
+  loginInit,
+  logout,
+  clearTokens,
+  storeTokens,
+  getUserId,
+  isTokenExpired,
+};

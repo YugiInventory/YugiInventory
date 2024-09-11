@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import * as SecureStore from "expo-secure-store";
 import { Text, TextInput, StyleSheet, View, Button } from "react-native";
-import BASE_URL from "../config";
 import { useForm, Controller } from "react-hook-form";
 import CardInfo from "./CardInfo";
 import {
@@ -9,8 +8,9 @@ import {
   clearTokens,
   loginInit,
   getUserId,
+  BASE_URL_,
+  BASE_URL,
 } from "../services/AuthFunctions";
-
 import PaginationBar from "../services/Pagination";
 
 const Login = () => {
@@ -21,9 +21,8 @@ const Login = () => {
   const [createpassword, setcreatepassword] = useState("");
   const [createEmail, setcreateEmail] = useState("");
 
-  const BASE_URL_ =
-    "http://ec2-3-135-192-227.us-east-2.compute.amazonaws.com:8000/";
-  const BASE_URL = "http://172.22.221.160:5555/";
+  const BASE = BASE_URL_;
+  const BASE2 = BASE_URL;
 
   const handleLogin = () => {
     //Login Have the user submit the login credentials.

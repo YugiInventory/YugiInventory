@@ -1,6 +1,6 @@
 import { Button, Text, TextInput, StyleSheet, View } from "react-native";
 import { useState } from "react";
-import BASE_URL from "../config";
+import { BASE_URL_ } from "../services/AuthFunctions";
 
 const CardInfo = () => {
   const generateCard = async () => {
