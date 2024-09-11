@@ -1,6 +1,5 @@
 # YugiInventory
 
-
 Testing
 Logging
 

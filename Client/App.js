@@ -1,11 +1,11 @@
 import { Button, Text, TextInput, StyleSheet, View } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import Login from "./screens/Login";
-import CreateUser from "./screens/CreateUser";
-import Profile from "./screens/Profile";
-import Inventory from "./screens/Inventory";
-import Home from "./screens/Home";
+import Login from "./components/Login";
+import CreateUser from "./components/CreateUser";
+import Profile from "./components/Profile";
+import Inventory from "./components/Inventory";
+import Home from "./components/Home";
 
 const Stack = createNativeStackNavigator();
 

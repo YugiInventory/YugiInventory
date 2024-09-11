@@ -122,9 +122,7 @@ const Inventory = () => {
       </View>
       <FlatList
         // All cards in pool
-        data={allCards.cards}
-        // Results of using search
-        // data={searchData}
+        data={searchData.length > 0 ? searchData : allCards.cards}
         keyExtractor={(item) => item.id.toString()}
         renderItem={renderItem}
         showsVerticalScrollIndicator={false}
