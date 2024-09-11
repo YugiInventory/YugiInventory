@@ -4,3 +4,4 @@ Server/config.py
 .sql
 sk789-test.pem
 __pycache__/
+.ydk

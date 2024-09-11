@@ -1,5 +1,7 @@
 from flask import Blueprint, make_response , jsonify, request
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.exc import SQLAlchemyError , IntegrityError
+from psycopg2.errors import UniqueViolation
+
 
 #Local
 
@@ -57,7 +59,6 @@ def edit_user_parameters(user_id, **kwargs):
             print(ve)
             db.session.rollback()
             response = server_error_response()
-    print('jaja;') 
     return response
 
 @user_bp.route('/deleteUser' , methods = ["DELETE"])

@@ -12,6 +12,7 @@ import {
 import BASE_URL from "../config";
 import { cardSearch } from "../utility";
 import { login } from "../services/AuthFunctions";
+import PaginationBar from "../services/Pagination";
 
 const Inventory = () => {
   const [allCards, setAllCards] = useState({ cards: [] });

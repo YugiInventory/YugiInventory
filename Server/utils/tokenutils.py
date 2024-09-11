@@ -5,15 +5,18 @@ from flask import request , jsonify
 from config import app,db
 from functools import wraps
 
-from models import RefreshToken , Card , CardinDeck , Deck , Inventory , User
+from models import RefreshToken , CardinDeck , Deck , Inventory , User
 from utils.constants import MODEL_MAP
 
 
-
 def issue_jwt_token(username,user_id):
-    token = jwt.encode({'username':username,'user_id':user_id,'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=45)},app.config['SECRET_KEY'])            
+    token = jwt.encode(
+        {'username':username,
+         'user_id':user_id,
+         'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=240),
+         'iat': datetime.datetime.now(datetime.timezone.utc)
+         },app.config['SECRET_KEY'])            
     return token
-
 
 def invalidate_jwt_token():
     pass
@@ -61,7 +64,7 @@ def authorize(check_func , edit=False):
                 resource_id = data.get("resource_id")
                 resource = resource_exists(resource_location,resource_id)
                 if not resource:
-                    return jsonify({"Error":"Resource does not exist"}),404
+                    return jsonify({"Error":"Resource does not existskibidibap"}),404
                 kwargs['resource'] = resource
             kwargs.update(data)
             if not check_func(user_id, *args, **kwargs):
@@ -76,7 +79,11 @@ def is_authorized_to_create(user_id, *args, **kwargs):
     ## For Card in Deck can you create the resource if you own the deck
 
     resource_location = kwargs["resource_location"]
-
+    if resource_location.lower() == 'cardsinsets':
+        exists = resource_exists(resource_location, kwargs["resource_id"])
+        if exists:
+            return True
+        return False
     if resource_location.lower() == 'cardsindecks':
         deck_id = kwargs.get("deck_id")
         if not deck_id:
@@ -131,7 +138,7 @@ def resource_exists(resource_location, resource_id):
 
 
 
-
+#Model Map will end up refrencing the repository objects instead of the model itself since the repository will handle getting the data
 
 
 
