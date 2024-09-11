@@ -12,6 +12,7 @@ import {
 import BASE_URL from "../config";
 import { cardSearch } from "../utility";
 import { login } from "../services/AuthFunctions";
+import PaginationBar from "../services/Pagination";
 
 const Inventory = () => {
   const [allCards, setAllCards] = useState({ cards: [] });
@@ -27,7 +28,7 @@ const Inventory = () => {
   useEffect(() => {
     const fetchCards = async () => {
       try {
-        const response = await fetch(`${BASE_URL}/cards`);
+        const response = await fetch(`${BASE_URL}/cards/getAllCards`);
         const data = await response.json();
         // console.log(data);
         setAllCards(data);

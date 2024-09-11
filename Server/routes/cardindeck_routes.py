@@ -4,6 +4,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from utils.tokenutils import token_required , authorize , is_authorized_to_create , is_authorized_to_modify
 from utils.server_responseutils import item_not_found_response , server_error_response , bad_request_response , unauthorized_response
 from utils.constants import ALLOWED_ATTRIBUTES
+from repo.card_in_deck_repo import CardinDeckRepository
 
 from models import Card , CardinDeck , Deck
 from config import db
@@ -14,62 +15,42 @@ cardinDeck_bp = Blueprint('cardinDeck' , __name__)
 @token_required
 @authorize(is_authorized_to_create,edit=False)
 def add_card_to_deck(user_id,**kwargs):
-    #Check to see if location matches for table
-    #Try to extract needed parameters
 
-    try:
-        resource_id = kwargs["resource_id"]
-        deck_id = kwargs["deck_id"]
-        location = kwargs["location"]
-        quantity = kwargs["quantity"]
-    except:
-        response = bad_request_response()
-        return response
+    try:        
+        card_to_add = Card.query.filter(Card.id==kwargs['resource_id']).first()
+        if card_to_add:
+            repo = CardinDeckRepository()
+            
+            filters = []
 
-    card_to_add = Card.query.filter(Card.id==resource_id).first()
-    
-    if card_to_add:
-        #need to check for duplicate
+            for key, value in kwargs.items():
+                if key in CardinDeckRepository.card_filters:
+                    filters.append(CardinDeckRepository.card_filters[key](value))
+                isduplicate_query = repo.filter(*filters)
+                isduplicate = isduplicate_query.first()
 
-        isduplicate = CardinDeck.query.filter(CardinDeck.card_id==resource_id,CardinDeck.location==location,CardinDeck.deck_id==deck_id).first()
-
-        if isduplicate:
-            try:
-                new_card_quantity = int(isduplicate.quantity) + int(quantity)
-                isduplicate.quantity = new_card_quantity
-                db.session.add(isduplicate)
-                db.session.commit()
-                response = make_response({"Duplicate Entry":"Combined Total Quantity"},250)
-            except SQLAlchemyError as se:
-                print(se)
-                db.session.rollback()
-                response = server_error_response()
-            except ValueError as ve:
-                print(ve)
-                db.session.rollback()
-                response = bad_request_response()
+                if isduplicate:
+                    print('icecream?')
+                    new_card_quantity = int(isduplicate.quantity) + int(kwargs['quantity'])
+                    updated_card = repo.update_and_commit({"quantity":new_card_quantity},isduplicate)
+                    response = make_response({"Duplicate Found":"Combined Quantity"}, 250)
+                else:
+                    print(kwargs["quantity"])
+                    new_card = repo.create_and_commit(kwargs["resource_id"],kwargs["deck_id"],kwargs["location"],kwargs["quantity"])
+                    response = make_response(jsonify(new_card.to_dict()),201)
         else:
-            try:
-                new_card_in_deck = CardinDeck(
-                    quantity = quantity,
-                    location = location,
-                    deck_id = deck_id,
-                    card_id = resource_id
-                )
-                db.session.add(new_card_in_deck)
-                db.session.commit()
-                response = make_response({"Sucess":"Card Added"},201)
-            except SQLAlchemyError as se:
-                print(se)
-                db.session.rollback()
-                response = server_error_response()
-            except ValueError as ve:
-                print(ve)
-                db.session.rollback()
-                response = bad_request_response()
-    else:
-        response = item_not_found_response()
-
+            print('fdsfafas')
+            response = item_not_found_response()
+    except SQLAlchemyError as se:
+        print(se)
+        response = server_error_response()
+    except ValueError as ve:
+        print(ve)
+        print('we have a value error')
+        response = bad_request_response()
+    except Exception as e:
+        print(e)
+        response = server_error_response()
     return response
 
 
@@ -77,17 +58,11 @@ def add_card_to_deck(user_id,**kwargs):
 @token_required
 @authorize(is_authorized_to_modify, edit=True)
 def edit_card_in_deck(user_id,**kwargs):
-    users_card_in_deck = kwargs["resource"]
-
-    # card_to_modify = CardinDeck.query.filter(CardinDeck.id==resource_id).first()
-
     try:
-        for key,value in kwargs.items():
-            if hasattr(users_card_in_deck,key) and key in ALLOWED_ATTRIBUTES["CardinDeck"]:
-                setattr(users_card_in_deck,key,value)
-        db.session.add(users_card_in_deck)
-        db.session.commit()
-        response = make_response({},200)
+        users_card_in_deck = kwargs["resource"]
+        repo = CardinDeckRepository()
+        updated_card = repo.update_and_commit(params_dict=kwargs, resource=users_card_in_deck)
+        response = make_response({},202)
     except SQLAlchemyError as se:
         print(se)
         db.session.rollback()
@@ -103,13 +78,11 @@ def edit_card_in_deck(user_id,**kwargs):
 @token_required
 @authorize(is_authorized_to_modify, edit=True)
 def delete_card_in_deck(user_id,**kwargs):
-    resource_id = kwargs["resource_id"]
-    card_to_delete = kwargs["resource"]
-    # card_to_delete = CardinDeck.query.filter(CardinDeck.id==resource_id).first()
-
     try:
-        db.session.delete(card_to_delete)
-        db.session.commit()
+        card_to_delete = kwargs["resource"]
+        # card_to_delete = CardinDeck.query.filter(CardinDeck.id==resource_id).first()
+        repo = CardinDeckRepository()
+        repo.delete_and_commit(resource=card_to_delete)
         response = make_response({},204)
     except SQLAlchemyError as se:   
         print(se)
