@@ -68,7 +68,7 @@ const Login = () => {
     console.log(createEmail);
     console.log(BASE_URL);
 
-    //Send post request with the informatin
+    //Send post request with the information
 
     const data = {
       username: createusername,
