@@ -83,10 +83,10 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   listContainer: {
-    alignItems: "flex-start", // Align items from left to right
+    alignItems: "flex-start",
   },
   row: {
-    justifyContent: "flex-start", // Align the items from left to right within each row
+    justifyContent: "flex-start",
     marginVertical: 10,
   },
   itemContainer: {
@@ -100,7 +100,7 @@ const styles = StyleSheet.create({
   cardImage: {
     width: "100%",
     height: "100%",
-    resizeMode: "contain", // Ensures the image fits within the container
+    resizeMode: "contain",
   },
   itemText: {
     fontSize: 12,
