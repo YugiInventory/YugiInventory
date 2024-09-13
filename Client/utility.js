@@ -1,4 +1,4 @@
-import BASE_URL from "./config";
+import BASE_URL from "./services/AuthFunctions";
 
 const storeAccessToken = async (accessToken) => {
   await SecureStore.setItemAsync("accessToken", accessToken);
