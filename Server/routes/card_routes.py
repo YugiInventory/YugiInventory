@@ -54,7 +54,7 @@ def get_single_card_id(card_id):
     repo = CardRepository()
     card_info = repo.get_item_by_id(card_id)    
     if card_info:
-        response = make_response(jsonify(card_info.to_dict(rules=('-card_in_deck','-card_in_set.card_in_inventory','-card_on_banlist'))),200)
+        response = make_response(jsonify(card_info.to_dict(rules=('-card_in_deck','-card_in_set.card_in_inventory','-card_on_banlist'))),200) #'-card_in_deck'
     else:
         response = item_not_found_response()
     return response    

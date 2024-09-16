@@ -5,3 +5,4 @@ Server/config.py
 sk789-test.pem
 __pycache__/
 .ydk
+Server/todo.txt

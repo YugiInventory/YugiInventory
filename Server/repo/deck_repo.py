@@ -30,7 +30,8 @@ class DeckRepository(ReadWriteRepositoryInterface):
         return deck
 
     def get_deck_and_minimal_card_info(self, deck_id):
-        single_deck = db.session.query(Deck).options(joinedload(Deck.card_in_deck).load_only(CardinDeck.card_id, CardinDeck.location)).filter(Deck.id==deck_id).first()
+        single_deck = db.session.query(Deck).options(joinedload(Deck.card_in_deck).joinedload(CardinDeck.card).noload(Card.card_in_set)).filter(Deck.id==deck_id).first() 
+        #.options(joinedload(Deck.card_in_deck).load_only(CardinDeck.card_id, CardinDeck.location))
         return single_deck
 
 

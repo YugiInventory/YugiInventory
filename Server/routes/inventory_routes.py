@@ -1,6 +1,7 @@
 from flask import Blueprint, make_response , jsonify , request
 from sqlalchemy.exc import SQLAlchemyError , IntegrityError
 from psycopg2.errors import UniqueViolation
+from pprint import pprint
 
 #Local imports
 from utils.tokenutils import token_required , authorize , is_authorized_to_modify , is_authorized_to_create
@@ -14,7 +15,51 @@ from config import db
 
 inventory_bp = Blueprint('inventory', __name__)
 
+@inventory_bp.route('/tempcardT/<int:id>')
+def ffff(id):
+    repo = CardinSetRepository()
+    card = repo.get_item_by_id(id)
+    response = make_response(card.to_dict())
+    return response
 
+@inventory_bp.route('/testGetInventory/<int:id>')
+def testget(id):
+    try:        
+        filters = get_filter_params(InventoryRepository, request.args)
+        page = request.args.get('page',default=1, type=int)
+        per_page = request.args.get('per_page',default=20,type=int)
+
+        repo = InventoryRepository()
+        query = repo.get_inventory_detailed(filters,id)
+        paginated_results = repo.paginate(query,page=page,per_page=per_page)
+        print(paginated_results.items)
+
+        # for inventory in paginated_results.items:
+        #     for attribute in inventory:
+        #         print(attribute)
+
+
+        card_list = [card.to_dict(rules=('-cardinSet.card.card_in_deck','-user','-cardinSet.releaseSet','-cardinSet.releaseSet.id''-cardinSet.card.card_on_banlist','-cardinSet.card')) for card in paginated_results.items]
+        
+        response_data = {
+            'cards': card_list,
+            'page': page,
+            'per_page' : per_page,
+            'total_pages' : paginated_results.pages,
+            'total_items' : paginated_results.total
+            }
+        
+        response = make_response(jsonify(response_data),200)
+    except SQLAlchemyError as se:
+        print(se)
+        error_message = f'Error w/ SQLAlchemy {se}'
+        return server_error_response()
+    except Exception as e:
+        print(e)
+        error_message = f'Error {e}'
+        return make_response(jsonify({'error': error_message}), 500)
+    return response
+    
 
 @inventory_bp.route('/getUserInventory', methods = ["GET"])
 @token_required
@@ -74,7 +119,7 @@ def add_single_card_to_inventory(user_id, **kwargs):
 
     
     #Addition still needs to check for existance here
-    #Check if resource_exists
+    #Check if resource_exists, this should already be done earlier by the is_authorized_to_create func
     try:
         cardinset_repo = CardinSetRepository()
         resource_id = kwargs["resource_id"]
@@ -209,17 +254,26 @@ def edit_card_in_inventory(user_id, **kwargs):
 @token_required
 @authorize(is_authorized_to_modify,edit=True)
 def delete_card_in_inventory(user_id, **kwargs):
-    
-    card_to_delete = kwargs["resource"]
-    
     try:
-        db.session.delete(card_to_delete)
-        db.session.commit()
+        card_to_delete = kwargs["resource"]
+        repo = InventoryRepository()
+        repo.delete_and_commit(resource=card_to_delete)
         response = make_response({},204)
     except SQLAlchemyError as se:
         print(se)
         db.session.rollback()
         response = server_error_response()
-
     return response
+
+
+    # try:
+    #     db.session.delete(card_to_delete)
+    #     db.session.commit()
+    #     response = make_response({},204)
+    # except SQLAlchemyError as se:
+    #     print(se)
+    #     db.session.rollback()
+    #     response = server_error_response()
+
+    # return response
 

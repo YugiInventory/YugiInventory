@@ -14,6 +14,7 @@ from routes.inventory_routes import inventory_bp
 from routes.deck_routes import deck_bp
 from routes.cardindeck_routes import cardinDeck_bp
 from routes.reconcile_routes import reconcile_bp
+from routes.dbtest_routes import test_bp
 
 app.register_blueprint(auth_bp, url_prefix = '/auth')
 app.register_blueprint(cards_bp, url_prefix = '/cards')
@@ -23,6 +24,8 @@ app.register_blueprint(inventory_bp, url_prefix='/inventory')
 app.register_blueprint(deck_bp , url_prefix='/deck')
 app.register_blueprint(cardinDeck_bp, url_prefix="/cardinDeck")
 app.register_blueprint(reconcile_bp)
+app.register_blueprint(test_bp, url_prefix='/zzz')
+
 
 if __name__ == '__main__':
 
