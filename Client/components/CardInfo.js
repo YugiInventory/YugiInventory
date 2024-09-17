@@ -5,7 +5,7 @@ import { BASE_URL_ } from "../services/AuthFunctions";
 const CardInfo = () => {
   const generateCard = async () => {
     try {
-      const response = await fetch(`${BASE_URL}/cards/getSingleCard/10`)
+      const response = await fetch(`${BASE_URL_}/cards/getSingleCard/10`)
         .then((response) => response.json())
         .then((data) => console.log(data.card_attribute));
     } catch (err) {

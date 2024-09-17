@@ -9,9 +9,15 @@ import {
   Button,
   TextInput,
 } from "react-native";
-import { cardSearch } from "../utility";
-import { login, BASE_URL_ } from "../services/AuthFunctions";
+import { cardSearch, inventoryCardSearch } from "../utility";
+import {
+  login,
+  BASE_URL_,
+  getUserId,
+  isTokenExpired,
+} from "../services/AuthFunctions";
 import PaginationBar from "../services/Pagination";
+import * as SecureStore from "expo-secure-store";
 
 const Inventory = () => {
   const [allCards, setAllCards] = useState({ cards: [] });
@@ -27,10 +33,20 @@ const Inventory = () => {
   useEffect(() => {
     const fetchCards = async () => {
       try {
-        const response = await fetch(`${BASE_URL}/cards/getAllCards`);
+        const token = await SecureStore.getItemAsync("accessToken");
+        // console.log(token);
+        // const isExpired = await isTokenExpired();
+        // console.log(isExpired);
+        const response = await fetch(
+          `${BASE_URL_}/inventory/getUserInventory`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
         const data = await response.json();
-        // console.log(data);
-        setAllCards(data);
+        // console.log(await getUserId());
+        setAllCards(data.cards);
+        // console.log(allCards[9].cardinSet.card.attack);
         setIsLoading(false);
       } catch (error) {
         console.error("Error fetching cards:", error);
@@ -51,7 +67,8 @@ const Inventory = () => {
       console.log("please enter a valid value");
       return null;
     }
-    const data = await cardSearch(card);
+    console.log(card);
+    const data = await inventoryCardSearch(card);
     if (data === null) {
       console.log("No Cards Found!");
     } else {
@@ -64,29 +81,33 @@ const Inventory = () => {
   const QuantityModal = () => {
     return (
       <View>
-        <Button title="+" />
+        <Button title="add" />
         <Text style={styles.quantityCount}>0</Text>
-        <Button title="-" />
+        <Button title="remove" />
       </View>
     );
   };
   const renderItem = ({ item }) => (
     <View style={styles.row}>
-      <Image source={{ uri: item.card_image }} style={styles.cardImage} />
+      <Image
+        source={{ uri: item.cardinSet.card.card_image }}
+        style={styles.cardImage}
+      />
       <View style={styles.cardInfo}>
-        <Text style={styles.cellName}>{item.name}</Text>
+        <Text style={styles.cellName}>{item.cardinSet.card.name}</Text>
         <Text style={styles.cell}>
-          {item.card_race} {item.card_type}
+          {item.card_race} {item.cardinSet.card.card_type}
         </Text>
-        {item.card_type === "Monster" && (
+        {item.cardinSet.card.card_type === "Monster" && (
           <View style={styles.statsContainer}>
             <Text style={styles.cell}>
-              ATK: {item.attack} DEF: {item.defense}
+              ATK: {item.cardinSet.card.attack} DEF:{" "}
+              {item.cardinSet.card.defense}
             </Text>
           </View>
         )}
         <Text style={styles.cellDescription} numberOfLines={2}>
-          {item.description}
+          {item.cardinSet.card.description}
         </Text>
       </View>
       <QuantityModal />
@@ -121,7 +142,7 @@ const Inventory = () => {
       </View>
       <FlatList
         // All cards in pool
-        data={searchData.length > 0 ? searchData : allCards.cards}
+        data={searchData.length > 0 ? searchData : allCards}
         keyExtractor={(item) => item.id.toString()}
         renderItem={renderItem}
         showsVerticalScrollIndicator={false}
