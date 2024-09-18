@@ -5,7 +5,7 @@ from flask_sqlalchemy import SQLAlchemy
 
 class CardRepository(ReadOnlyRepositoryInterface):
     
-    card_filters = {
+    search_filters = {
         'name_partial' : lambda value: Card.name.ilike(f'%{value}%'),
         'name_exact' : lambda value: Card.name==value,
         'card_type' : lambda value: Card.card_type.ilike(f'%{value}%'), 

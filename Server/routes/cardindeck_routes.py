@@ -5,6 +5,7 @@ from utils.tokenutils import token_required , authorize , is_authorized_to_creat
 from utils.server_responseutils import item_not_found_response , server_error_response , bad_request_response , unauthorized_response
 from utils.constants import ALLOWED_ATTRIBUTES
 from repo.card_in_deck_repo import CardinDeckRepository
+from repo.card_repo import CardRepository
 
 from models import Card , CardinDeck , Deck
 from config import db
@@ -15,32 +16,34 @@ cardinDeck_bp = Blueprint('cardinDeck' , __name__)
 @token_required
 @authorize(is_authorized_to_create,edit=False)
 def add_card_to_deck(user_id,**kwargs):
+    print(kwargs)
+    print(user_id)
 
-    try:        
-        card_to_add = Card.query.filter(Card.id==kwargs['resource_id']).first()
+    try:
+        #Get the card, then get then check if that card exists in the deck also
+        card_repo = CardRepository()
+        card_to_add = card_repo.get_item_by_id(kwargs["resource_id"])
         if card_to_add:
-            repo = CardinDeckRepository()
-            
+            #find the cardindeck item location/card_id
+            cardindeck_repo = CardinDeckRepository()
             filters = []
-
             for key, value in kwargs.items():
                 if key in CardinDeckRepository.card_filters:
-                    filters.append(CardinDeckRepository.card_filters[key](value))
-                isduplicate_query = repo.filter(*filters)
-                isduplicate = isduplicate_query.first()
-
-                if isduplicate:
-                    print('icecream?')
-                    new_card_quantity = int(isduplicate.quantity) + int(kwargs['quantity'])
-                    updated_card = repo.update_and_commit({"quantity":new_card_quantity},isduplicate)
-                    response = make_response({"Duplicate Found":"Combined Quantity"}, 250)
-                else:
-                    print(kwargs["quantity"])
-                    new_card = repo.create_and_commit(kwargs["resource_id"],kwargs["deck_id"],kwargs["location"],kwargs["quantity"])
-                    response = make_response(jsonify(new_card.to_dict()),201)
+                    filters.append(CardinDeckRepository.card_filters[key](value))           
+            isduplicate = cardindeck_repo.filter(*filters).first()
+            if isduplicate:
+                print('icecream?')
+                new_card_quantity = int(isduplicate.quantity) + int(kwargs['quantity'])
+                print(f'The new card quantity is {new_card_quantity}' )
+                updated_card = cardindeck_repo.update_and_commit({"quantity":new_card_quantity},isduplicate)
+                response = make_response({"Duplicate Found":"Combined Quantity"}, 250)
+            else:
+                print(kwargs["quantity"])
+                new_card = cardindeck_repo.create_and_commit(kwargs["resource_id"],kwargs["deck_id"],kwargs["location"],kwargs["quantity"])
+                response = make_response(jsonify(new_card.to_dict()),201)
         else:
-            print('fdsfafas')
             response = item_not_found_response()
+        return response
     except SQLAlchemyError as se:
         print(se)
         response = server_error_response()
@@ -50,8 +53,10 @@ def add_card_to_deck(user_id,**kwargs):
         response = bad_request_response()
     except Exception as e:
         print(e)
+        print('hahgfsgfsgaxd')
         response = server_error_response()
     return response
+    
 
 
 @cardinDeck_bp.route('/editCardinDeck' , methods=["PATCH"])

@@ -5,6 +5,7 @@
 # Remote library imports
 # Local imports
 from config import app
+import logging
 
 from routes.auth_routes import auth_bp
 from routes.card_routes import cards_bp
@@ -15,6 +16,9 @@ from routes.deck_routes import deck_bp
 from routes.cardindeck_routes import cardinDeck_bp
 from routes.reconcile_routes import reconcile_bp
 from routes.dbtest_routes import test_bp
+
+# logging.basicConfig()
+# logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
 app.register_blueprint(auth_bp, url_prefix = '/auth')
 app.register_blueprint(cards_bp, url_prefix = '/cards')

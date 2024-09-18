@@ -10,6 +10,7 @@ class CardinDeckRepository(ReadWriteRepositoryInterface):
         'card_id' : lambda value: CardinDeck.card_id==value,
         'location' : lambda value: CardinDeck.location==value,
         'deck_id' : lambda value: CardinDeck.deck_id==value,
+        'resource_id' : lambda value: CardinDeck.card_id==value,
     }
     
     def __init__(self):
@@ -22,7 +23,7 @@ class CardinDeckRepository(ReadWriteRepositoryInterface):
             deck_id = deck_id,
             card_id = card_id
         )
-        db.session.commit(new_CardinDeck)
+        db.session.add(new_CardinDeck)
         return new_CardinDeck
 
     def create_and_commit(self, card_id, deck_id, location, quantity):

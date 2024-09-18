@@ -58,3 +58,10 @@ def getReleaseSet(id):
     data = repo.get_item_by_id(id)
     response = make_response(data.to_dict())
     return response
+
+@test_bp.route('/getCardinDeck/<int:id>')
+def getCardinDeck(id):
+    repo = CardinDeckRepository()
+    data = repo.get_item_by_id(id)
+    response = make_response(data.to_dict())
+    return response

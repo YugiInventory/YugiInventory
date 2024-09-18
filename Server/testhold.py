@@ -52,10 +52,7 @@ class User(db.Model, SerializerMixin):
     #ForeignKeys
 
     #relationships    
-    # card_in_inventory = db.relationship("Inventory" , backref = "user")
-    # user_decks = db.relationship("Deck",backref = "user")
 
-    # refresh_token = db.relationship('RefreshToken', back_populates = "user")
 
     #validations
     @validates('username')
@@ -167,9 +164,6 @@ class Card(db.Model, SerializerMixin):
     #ForeignKeys
     
     #relationships
-    
-    # card_in_deck = db.relationship("CardinDeck",backref = "card")     
-    # # card_on_banlist = db.relationship('BanlistCard',backref='card')
 
     card_in_set = db.relationship('CardinSet', back_populates ='card')
     card_in_deck = db.relationship('CardinDeck', back_populates='card')
@@ -199,7 +193,6 @@ class Deck(db.Model, SerializerMixin):
 
     #relationships
 
-    # card_in_deck = db.relationship('CardinDeck', backref = 'deck')
 
     #validations
     @validates('name')
@@ -314,7 +307,6 @@ class ReleaseSet(db.Model, SerializerMixin):
 
     #relationships
 
-    # card_in_set = db.relationship('CardinSet', backref = 'releaseSet')
 
 
     #validations
@@ -340,7 +332,6 @@ class CardinSet(db.Model,SerializerMixin):
 
     #relationships
     card = db.relationship("Card",back_populates='card_in_set')
-    # card_in_inventory = db.relationship("Inventory" , backref = "cardinSet") 
 
 
     #Validations
@@ -368,7 +359,6 @@ class Banlist(db.Model, SerializerMixin):
 
     #relationships
 
-    # card_on_banlist = db.relationship('BanlistCard',backref='banlist') 
 
     #seralizer rules
     serialize_rules = ('-card_on_list.banlist',)

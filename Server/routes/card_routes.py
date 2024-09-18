@@ -3,6 +3,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 #local imports
 from models import Card
+from utils.flaskutils import get_filter_params
 from utils.server_responseutils import paginate , server_error_response , item_not_found_response
 from repo.card_repo import CardRepository
 
@@ -15,16 +16,30 @@ def get_all_cards():
     #2. Create the query
     #3. Execute the query
     #4. Return the results
+    filters = get_filter_params(CardRepository,request.args)
+    page = request.args.get('page',default=1,type=int)
+    per_page = request.args.get('per_page',default=20,type=int)
+
+    repo = CardRepository()
+    query = repo.filter(*filters)
 
     try:
-        filters = []
-        page = request.args.get('page', default=1, type=int)
+        # filters = []
+        # page = request.args.get('page', default=1, type=int)
+        # per_page = request.args.get('per_page',default=20,type=int)
+
+        # for key, value in request.args.items():
+        #     if key in CardRepository.card_filters:
+        #         filters.append(CardRepository.card_filters[key](value))
+
+        filters = get_filter_params(CardRepository,request.args)
+        page = request.args.get('page',default=1,type=int)
         per_page = request.args.get('per_page',default=20,type=int)
 
-        for key, value in request.args.items():
-            if key in CardRepository.card_filters:
-                filters.append(CardRepository.card_filters[key](value))
-        
+        repo = CardRepository()
+        query = repo.filter(*filters)
+
+
         repo = CardRepository()
         query = repo.filter(*filters)
         paginated_results = repo.paginate(query, page=page, per_page=per_page)
@@ -58,3 +73,4 @@ def get_single_card_id(card_id):
     else:
         response = item_not_found_response()
     return response    
+    

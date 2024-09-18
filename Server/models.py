@@ -262,8 +262,10 @@ class CardinDeck(db.Model, SerializerMixin):
                 'side':0,
                 'extra':0,
                 'max_count': 0
-        }     
-        for val in deck.card_in_deck:
+        }   
+        print('Printing cards in the deck')
+        print(deck.card_in_deck)  
+        for val in deck.card_in_deck: ##this might be broke with relationships down
             #this gets every card_in_deck for the deck we are trying to insert into 
             count[val.location] += int(val.quantity)
             if val.card_id == int(self.card_id):
@@ -271,9 +273,19 @@ class CardinDeck(db.Model, SerializerMixin):
         
         #Now add the self quantity.
 
-        count[self.location] += int(self.quantity)
-        count['max_count'] += int(self.quantity)
-        #issue here is that on a patch request we have the card already in a card_in_deck so if i try to update from 1 to 2 this will read it as we already have 1 and now we are adding 2. This will break the validation. We should if we already have the card in the deck we should remove it form the list and just add the new quantity and see if that breaks it. Implement it in the morning im about to pass out. 
+        # count[self.location] += int(self.quantity)
+        # count['max_count'] += int(self.quantity)
+        #issue here is that on a patch request we have the card already in a card_in_deck so if i try to update from 1 to 2 this will read it as we already have 2 and now we are adding 2. This will break the validation. We should if we already have the card in the deck we should remove it form the list and just add the new quantity and see if that breaks it. Implement it in the morning im about to pass out. 
+        #Removing this will break inserts 
+        #Updated objects are "dirty" so the session is aware of the changes,
+        #New objects are not seen until flushed
+        #session.new can be used to see new cards t
+        new_cards = db.session.new
+        for card in new_cards:
+            count[card.location] += card.quantity
+            if card.card_id == int(self.card_id):
+                count['max_count'] += card.quantity
+        
         for key in limits:
             if count[key] > limits[key]:
                 raise ValidationError('quantity',self.quantity,'Adding card exceeds deck limits')

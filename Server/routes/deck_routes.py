@@ -17,8 +17,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from pprint import pprint
 import logging
-logging.basicConfig()
-logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+
 
 
 deck_bp = Blueprint('deck',__name__)
