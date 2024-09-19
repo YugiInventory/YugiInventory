@@ -25,7 +25,7 @@ def get_all_sets_info():
         set_list = [pack.to_dict(only=('name','card_count','id','releaseDate','set_code')) for pack in paginated_results]
         
         response_data = {
-            'cards' : set_list,
+            'sets' : set_list,
             'page' : page,
             'per_page' : per_page,
             'total_pages' : paginated_results.pages,
@@ -39,17 +39,11 @@ def get_all_sets_info():
     return response
 
 
-    # set_info = ReleaseSet.query.all()
-    # set_list = [pack.to_dict(only=('name','card_count','id','releaseDate','set_code')) for pack in set_info]
-    # response = make_response(jsonify(set_list),200)
-    # return response
-
-
 @set_bp.route('/getSingleSet/<int:set_id>')
 def get_single_set_info(set_id):
     try:
         set_info = ReleaseSet.query.filter(ReleaseSet.id==set_id).first()
-        response = make_response(jsonify(set_info.to_dict()),200)
+        response = make_response(jsonify(set_info.to_dict()),200)   #rules=('-card_in_set.card.card_in_deck','-card_in_set.card.card_on_banlist','-card_in_set.card_in_inventory','-card_in_set.releaseSet','card_in_set.releaseSet.id')
         #card image, id only thing we need from the card section. 
     except SQLAlchemyError as se:
         print(se)

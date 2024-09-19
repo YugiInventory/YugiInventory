@@ -6,7 +6,7 @@ class InventoryRepository(ReadWriteRepositoryInterface):
 
     search_filters = {
 
-        'isFirstEd' : lambda value: Inventory.isFirstEd==value,
+        # 'isFirstEd' : lambda value: Inventory.isFirstEd==value,
         'name_partial' : lambda value: Card.name.contains(value),
         'card_code_partial' : lambda value: CardinSet.card_code.contains(value),
         'name_exact' : lambda value: Card.name==value,
@@ -17,7 +17,7 @@ class InventoryRepository(ReadWriteRepositoryInterface):
     ALLOWED_ATTRIBUTES = {'quantity','isFirstEd'}
 
     mappings = {
-        'resource_id': 'CardinSet'
+        'resource_id': 'cardinSets'
     } #This is for the routes to repo since routes will return resource_id,location. Hold up wait a minute. 
 
 

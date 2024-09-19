@@ -1,14 +1,15 @@
 from flask import Blueprint, make_response , jsonify, request
 from sqlalchemy.exc import SQLAlchemyError , IntegrityError
 from psycopg2.errors import UniqueViolation
+from repo.user_repo import UserRepository
 
 
 #Local
 
-from models import User
+from models import User, RefreshToken
 from config import db
 from utils.server_responseutils import server_error_response , item_not_found_response
-from utils.tokenutils import token_required , authorize , is_authorized_to_modify
+from utils.tokenutils import token_required , authorize , is_authorized_to_modify, issue_jwt_token
 from utils.constants import ALLOWED_ATTRIBUTES
 
 user_bp = Blueprint('user', __name__)
@@ -16,24 +17,42 @@ user_bp = Blueprint('user', __name__)
 
 @user_bp.route('/createUser', methods=['POST'])
 def create_user():
-    data = request.get_json()
     try:
-        new_user = User(
-            username = data['username'],
-            password_hash = data['password'],
-            email = data['email']
-        )
-        db. session.add(new_user)
-        db.session.commit()
-        response = make_response({},200)
+        user_repo = UserRepository()
+        data = request.get_json()
+        new_user = user_repo.create_and_commit(username=data['username'],password=data['password'],email=data['email'])
+        jwt_token = issue_jwt_token(new_user.username, new_user.id)
+        refresh_token = RefreshToken.issue_refresh_token(new_user.id)
+        new_user_dict = new_user.to_dict()
+        new_user_dict['accessToken'] = jwt_token
+        new_user_dict['refresh_token'] = refresh_token.token
+        response = make_response(jsonify(new_user_dict),201)
     except SQLAlchemyError as se:
         print(se)
         response = server_error_response()
     except ValueError as ve:
         print(ve)
         response = make_response({'Error':'Failed to Create'},400)
+    return response    
+
+    # data = request.get_json()
+    # try:
+    #     new_user = User(
+    #         username = data['username'],
+    #         password_hash = data['password'],
+    #         email = data['email']
+    #     )
+    #     db. session.add(new_user)
+    #     db.session.commit()
+    #     response = make_response({},201)
+    # except SQLAlchemyError as se:
+    #     print(se)
+    #     response = server_error_response()
+    # except ValueError as ve:
+    #     print(ve)
+    #     response = make_response({'Error':'Failed to Create'},400)
     
-    return response
+    # return response
 
 @user_bp.route('/editUser', methods = ["PATCH"])
 @token_required

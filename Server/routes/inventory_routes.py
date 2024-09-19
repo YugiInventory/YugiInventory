@@ -76,7 +76,7 @@ def getinventory(user_id):
         card_list = [card.to_dict(rules=('-cardinSet.card.card_in_deck','-user','-cardinSet.releaseSet','-cardinSet.releaseSet.id''-cardinSet.card.card_on_banlist','-cardinSet.card')) for card in paginated_results.items]
         
         response_data = {
-            'cards': card_list,
+            'inventory': card_list,
             'page': page,
             'per_page' : per_page,
             'total_pages' : paginated_results.pages,

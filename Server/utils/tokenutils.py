@@ -79,8 +79,8 @@ def is_authorized_to_create(user_id, *args, **kwargs):
     ## For Card in Deck can you create the resource if you own the deck
 
     resource_location = kwargs["resource_location"]
-    if resource_location.lower() == 'cardsinsets':
-        exists = resource_exists(resource_location, kwargs["resource_id"])
+    if resource_location.lower() == 'inventory':
+        exists = resource_exists('cardinsets', kwargs["resource_id"])
         if exists:
             return True
         return False

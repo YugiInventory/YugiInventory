@@ -69,21 +69,6 @@ def edit_single_deck(user_id,**kwargs):
         print(e)
         print('unhandled exception')
         response = server_error_response()
-    # try:
-    #     for key,value in kwargs.items():  #only allow select keys to be modified as well
-    #         if hasattr(users_deck,key) and key in ALLOWED_ATTRIBUTES["Deck"]:
-    #             setattr(users_deck,key,value)
-    #     db.session.add(users_deck)
-    #     db.session.commit()
-    #     response = make_response({"Sucess":"Updated"},202)
-    # except ValueError as ve:
-    #     print(ve)
-    #     db.session.rollback()
-    #     response = bad_request_response()
-    # except SQLAlchemyError as se:
-    #     print(se)
-    #     db.session.rollback()
-    #     response = server_error_response()
     return response
 
 @deck_bp.route('/deleteSingleDeck', methods=['POST'])
@@ -122,7 +107,7 @@ def get_users_decks(user_id):
         query = repo.filter(*filters)
         paginated_results = repo.paginate(query)
 
-        deck_list = [deck.to_dict(rules=('-card_in_deck','-user')) for deck in paginated_results.items()]
+        deck_list = [deck.to_dict(rules=('-card_in_deck','-user')) for deck in paginated_results.items]
         response_data = {
             'decks' : deck_list,
             'page' : page, 

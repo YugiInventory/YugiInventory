@@ -9,7 +9,7 @@ from sqlalchemy.orm import joinedload, load_only
 class DeckRepository(ReadWriteRepositoryInterface):
     
     search_filters = {
-        'name' : lambda value: Deck.name.ilike(f'%{value}%'),
+        'name_partial' : lambda value: Deck.name.ilike(f'%{value}%')
     }
 
     def __init__(self):
