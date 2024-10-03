@@ -130,7 +130,14 @@ class Inventory(db.Model, SerializerMixin):
     # def __repr__(self):
     #     return f'Inventory belongs to user with id {self.user_id}'
 
-    
+class AltArt(db.Model,SerializerMixin):
+    __tablename__ = 'AltArts'
+    id = db.Column(db.Integer, primary_key = True)
+    ygopro_id = db.Column(db.String)
+    card_id = db.Column(db.Integer, db.ForeignKey('Cards.id'))
+    releaseSet_id = db.Column(db.Integer, db.ForeignKey('ReleaseSets.id'))
+    card_image = db.Column(db.String) #Reference to URL on S3
+
 
 class Card(db.Model, SerializerMixin):
     __tablename__ = 'Cards'

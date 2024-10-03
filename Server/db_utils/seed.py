@@ -90,7 +90,7 @@ def getinitcards(set2idmap):
     init_card_arr = []    #for testing purposes 
     card_to_id_map = {}   #init cards searchable by id 
     released_cards_arr = []  #arr for db 
-
+    alt_art_arr = [] 
     print(len(card_data['data']))
 
     i = 0
@@ -161,6 +161,23 @@ def getinitcards(set2idmap):
                         #failed_to_create_released card
                         print(f'failed to create: {e}')
                         failed_released_cards.append((card_id,cardSet['set_code']))
+                #Create Cards with different Images here as well
+                if len(card['card_images']) > 1:
+                    for alt_art in card['card_images']:
+                        if alt_art["id"] != card_id:
+                            alt_art_url = upload_images()
+                            new_alt_Art = AltArt(
+                                card_id = i,
+                                card_image = alt_art_url
+                            )
+                            alt_art_arr.append(new_alt_Art)
+                        else:
+                            continue
+                    #Create the AltArt Image As well
+                    #Card_id = i 
+                    #Card_image would be s3 url
+                    #card_img_url = 'temp' #upload_images(img_url=img_url,id=card_id)
+                    #
             except:
                 #failed to create the card
                 failed_cards.append(card_id)

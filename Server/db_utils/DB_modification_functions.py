@@ -6,6 +6,7 @@ import boto3
 from config import db
 from models import ReleaseSet, Card, CardinSet
 from seed import upload_images
+import requests
 
 session = boto3.Session(profile_name='shamsk')
 s3 = session.client('s3')
@@ -28,7 +29,6 @@ def createDBReleaseSet(release_set): #releaseSet is the API object
         error_name = release_set['set_name']
         return error_name
     
-
 def createDBCard(card): #card is the card_obj from the API
     #lets assume that we have a valid card to be added 
     #upload the card image to s3, use the function we already have
@@ -98,3 +98,30 @@ def createDBCardinSet(release_set_id, card_id, set_name,card_obj):
 
 def fillcards(): #toggle the card flags
     pass
+
+def updateReleaseDates(): 
+    #get the ReleaseDates for every card
+    needed_cards = Card.query.filter(Card.LegalDate == None).all()
+    base_url = 'https://db.ygoprodeck.com/api/v7/cardinfo.php?name='
+    for card in needed_cards:
+        card_name = card["name"]
+        req_url = base_url + card_name
+        response = requests.get(req_url)
+        card_data = response.json()
+
+        #We will get the info information on the cards release_sets in card_sets
+
+        releases = card_data["card_sets"]
+        release_date = '9999-99-99'
+        for release in releases:
+            set_name = release['set_name']
+            #Get the releaseDate of that set
+            release_set = ReleaseSet.query.filter(ReleaseSet.name==set_name).first()
+            date = release_set["releaseDate"]
+            release_date = min(release_date,date)
+        card.release_date = release_date
+        
+        #function to create AltArt as well
+
+        db.session.add(card)
+

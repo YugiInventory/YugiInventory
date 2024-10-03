@@ -10,8 +10,51 @@ import {
   getUserId,
   BASE_URL_,
   BASE_URL,
+  isTokenExpired,
+  logout,
 } from "../services/AuthFunctions";
-import PaginationBar from "../services/Pagination";
+// import PaginationBar from "../services/Pagination";
+
+const handleCreateAccount = async () => {
+  console.log(createusername);
+  console.log(createpassword);
+  console.log(createEmail);
+  console.log(BASE_URL_)
+  //Send post request with the informatin
+  const data = {
+    username: createusername,
+    password: createpassword,
+    email: createEmail,
+  };
+
+  try {
+    const response = await fetch(`${BASE_URL_}/user/createUser'`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      console.log(response);
+      throw new Error("???");
+    } else {
+      console.log("succ");
+    }
+  } catch (e) {
+    console.log(e.message);
+  }
+};
+
+const handleLogin = () => {
+  //Login Have the user submit the login credentials.
+  //Get a return back from the server and if it is good then we will also have a refreshToken and an accessToken
+  //Store these values in securestore.
+  console.log("Username:", username);
+  console.log("Password:", password);
+  loginInit(username, password);
+};
 
 const Login = () => {
   const [username, setUsername] = useState("");
@@ -21,79 +64,41 @@ const Login = () => {
   const [createpassword, setcreatepassword] = useState("");
   const [createEmail, setcreateEmail] = useState("");
 
-  const BASE = BASE_URL_;
-  const BASE2 = BASE_URL;
-
-  const handleLogin = () => {
-    //Login Have the user submit the login credentials.
-    //Get a return back from the server and if it is good then we will also have a refreshToken and an accessToken
-    //Store these values in securestore.
-    console.log("Username:", username);
-    console.log("Password:", password);
-    loginInit(username, password);
-  };
+  const BASE = BASE_URL_; //this is the aws link
+  const BASE2 = BASE_URL; //local link
 
   const handleLogout = async () => {
     console.log("logout");
 
     //Get the user_id
+    await logout();
+    
+    console.log('zzzz')
 
-    try {
-      const userid = await getUserId();
-      if (!userid) {
-        console.log("No id found in token");
-        throw new Error("Token has issue");
-      }
-      const response = await fetch(`${BASE_URL_}/Logout`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ user_id: userid }),
-      });
-      if (!response.ok) {
-        console.log("Logout failed");
-        throw new Error("Logout failed");
-      }
-      await clearTokens();
-      return true;
-    } catch (e) {
-      console.log("Error logging out", e);
-    }
   };
 
-  const handleCreateAccount = async () => {
-    console.log(createusername);
-    console.log(createpassword);
-    console.log(createEmail);
-    console.log(BASE_URL);
+  const testExpoStore = async() => {
+  let accesstoken = await SecureStore.getItemAsync("accessToken")
+  if (accesstoken){
+    console.log(accesstoken)
+  }
+  else{
+    console.log('its not here')
+  }
+  let refreshtoken = await SecureStore.getItemAsync("refreshToken")
+  if (refreshtoken){
+    console.log(refreshtoken)
+  }
+  else{
+    console.log('no refresh token')
+  }
+}
 
-    //Send post request with the informatin
-
-    const data = {
-      username: createusername,
-      password: createpassword,
-      email: createEmail,
-    };
-
-    try {
-      const response = await fetch(`${BASE_URL_}/user`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        throw new Error("???");
-      } else {
-        console.log("succ");
-      }
-    } catch (e) {
-      console.log(e.message);
-    }
-  };
+  const testToken = async() => {
+    const val = await isTokenExpired()
+    console.log(val)
+    console.log('zzz')
+  }
 
   return (
     <View>
@@ -120,7 +125,10 @@ const Login = () => {
         />
         <TextInput placeholder="enter email" onChangeText={setcreateEmail} />
         <Button title="Create Account" onPress={handleCreateAccount} />
-        <PaginationBar currentPage={1}></PaginationBar>
+        <Button title="testSecurecore" onPress={testExpoStore} />
+        <Button title="testJWTDecode" onPress={testToken} />
+        <Button title="tokenClear" onPress={testExpoStore} />
+
       </View>
     </View>
   );

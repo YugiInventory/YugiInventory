@@ -8,7 +8,7 @@ from sqlalchemy import text
 #Helper Functions
 
 #testing imports
-from testingfunctions import deleteSet
+from Server.db_utils.testingfunctions import deleteSet
 
 from DB_modification_functions import createDBCard, createDBCardinSet , createDBReleaseSet
 
