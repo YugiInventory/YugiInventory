@@ -1,9 +1,12 @@
 import requests
 import time
+import boto3
 from app import app
 from config import db
 from models import *
 from sqlalchemy import text
+from tempfile import NamedTemporaryFile
+
 
 #Helper Functions
 
@@ -17,6 +20,166 @@ from DB_modification_functions import createDBCard, createDBCardinSet , createDB
 card_endpoint = 'https://db.ygoprodeck.com/api/v7/cardinfo.php'
 set_endpoint = 'https://db.ygoprodeck.com/api/v7/cardsets.php'
 release_set_endpoint = 'https://db.ygoprodeck.com/api/v7/cardinfo.php?cardset='
+
+def createDBReleaseSet(release_set): #releaseSet is the API object
+        pack = ReleaseSet(
+            name = release_set['set_name'],
+            releaseDate = release_set.get('tcg_date', None),
+            card_count = release_set['num_of_cards'],
+            set_code = release_set['set_code']
+        )
+        # with app.app_context():
+        db.session.add(pack)
+        db.session.flush()
+        return pack.id , pack.name , pack.releaseDate
+
+def upload_images(img_url,id): #imgURL is the ygoAPI link to the image, id is the ygproid from the API
+    session = boto3.Session(profile_name='shamsk')
+    s3 = session.client('s3')
+    bucket_name = 'yugitorybuckettest'
+    s3_key = f'{id}.jpg'
+    s3_url = f'https://{bucket_name}.s3.amazonaws.com/{s3_key}' 
+    retries = 0 
+
+    while retries < 3: 
+        try:
+            img_bin = requests.get(img_url).content
+            with NamedTemporaryFile(suffix="'jpg") as temp_file:
+                temp_file.write(img_bin)
+                file_name=temp_file.name
+                s3.upload_file(file_name,bucket_name,s3_key)
+            break
+        
+        except Exception as e:
+            retries +=1 
+            if retries == 3:
+                print(f'Error getting image for id {id} Error :{e}')
+                break
+            print(f'Error: Retrying attepmt {retries}')        
+        time.sleep(60)
+
+    return s3_url
+
+def createDBcardSkeleton(card_obj):
+    primary_id = card_obj['id']
+    img_url = card_obj['card_images'][0]['image_url_small']
+
+    card_type = 'Monster'
+    if 'Spell' in card_obj['type']:
+        card_type = 'Spell'
+    elif 'Trap' in card_obj['type']:
+        card_type = 'Trap'
+
+    s3_url = 'temp' #upload_images(img_url=img_url,id=card_id)
+
+    card_skeleton = Card(
+        yg_pro_id = primary_id,
+        name = card_obj['name'],
+        description = card_obj['desc'],
+        attack = card_obj.get('atk'), #card['atk'] if card['atk'] else None,
+        defense = card_obj.get('def'), #card['def'] if card['def'] else None,
+        level = card_obj.get('level'), #card['level'] if card['level'] else None,
+        isEffect = False,
+        isTuner = False,
+        isFlip = False,
+        isSpirit = False,
+        isUnion = False,
+        isGemini = False,
+        isPendulum = False,
+        isRitual = False,
+        isToon = False,
+        isFusion = False,
+        isSynchro = False,
+        isXYZ = False,
+        isLink = False,
+        card_type = card_type,
+        card_race = card_obj.get('race'), #card['race'] if card['race'] else None,
+        card_attribute = card_obj.get('attribute'), #card['attribute'] if card['attribute'] else None,
+        LegalDate = None,
+        card_image = s3_url,
+        frameType = card_obj['frameType']
+    ) 
+    db.session.add(card_skeleton)
+    db.session.flush()
+
+    return card_skeleton.id , card_skeleton
+
+def createDBAltArt(card_images_arr,card_id,default_id):
+    #logic to to create Alts if needed
+    if len(card_images_arr) > 1:
+        for alt_art in card_images_arr:
+            if alt_art["id"] != default_id:
+                s3_url = upload_images(alt_art["image_url_small"],alt_art["id"])
+                new_alt_art = AltArt(
+                    card_id = card_id,
+                    card_image = s3_url,
+                    ygopro_id = alt_art["id"]
+                )
+                db.session.add(new_alt_art)
+    return
+
+def toggleDBcardSkeletonbools(init_cards):
+    #fill out the information in the Cards thar are None
+    #We can have the enpoint we are searching for and the values to toggle on 
+
+    type_endpoint_dict = {
+        "Effect Monster" : ['isEffect'],
+        "Flip Effect Monster" : ['isFlip', 'isEffect'],
+        "Gemini Monster" : ['isGemini'], 
+        "Normal Tuner Monster" : ['isTuner'],
+        "Pendulum Effect Monster" : ['isEffect','isPendulum'], 
+        "Pendulum Flip Effect Monster" : ['isEffect','isFlip','isPendulum'], 
+        "Pendulum Normal Monster" : ['isPendulum'], 
+        "Pendulum Tuner Effect Monster" : ['isPendulum','isTuner','isEffect'], 
+        "Ritual Effect Monster" : ['isRitual', 'isEffect'],
+        "Ritual Monster" : ['isRitual'],
+        "Spirit Monster" : ['isSpirit'],
+        "Toon Monster" : ['isToon'],
+        "Tuner Monster" : ['isTuner'],
+        "Union Effect Monster" : ['isUnion'], 
+        "Fusion Monster" : ['isFusion'],
+        "Link Monster" : ['isLink'],
+        "Pendulum Effect Fusion Monster" : ['isPendulum','isFusion','isEffect'],
+        "Synchro Monster" : ['isSynchro'], 
+        "Synchro Pendulum Effect Monster" : ['isSynchro','isPendulum','isEffect'],
+        "Synchro Tuner Monster" : ['isSynchro','isTuner'],
+        "XYZ Monster" : ['isXYZ'],
+        "XYZ Pendulum Effect Monster" : ['isXYZ','isPendulum','isEffect']
+    }
+    
+    base_url = 'https://db.ygoprodeck.com/api/v7/cardinfo.php?type='
+
+    print('Adding Toggles')
+
+    for key in type_endpoint_dict: #type_endpoint_dict
+        #get the api results
+        #search for the cards and the flip the toggle
+        i = 0 
+        toggles = type_endpoint_dict[key]
+        req_url = base_url + key
+
+        req_info = requests.get(req_url)
+        card_data = req_info.json()
+        print(f'Current Key {key}')
+        total_entries = len(card_data['data'])
+
+        for card in card_data['data']:
+            if init_cards.get(card['id']):
+                i+=1
+                card_info = init_cards[card['id']]
+                #update card toggles
+                for toggle in toggles:
+                    setattr(card_info, toggle , True)
+                #update dict
+                init_cards[card['id']] = card_info
+                print(f'{i} of {total_entries}')
+    cards_array = list(init_cards.values())
+
+    return cards_array , init_cards
+
+
+
+
 
 def update_database():
 #First we want to figure out which releaseSets we do not have in the database. 
@@ -76,90 +239,6 @@ def reconcileReleaseSets(setlist, setdict): #given a list of entries see if they
         if releaseSet['set_name'] not in setdict:
             unadded_sets.append(releaseSet)
     return unadded_sets
-
-# def createDBReleaseSet(release_set): #releaseSet is the API object
-#     try:
-#         pack = ReleaseSet(
-#             name = release_set['set_name'],
-#             releaseDate = release_set.get('tcg_date', None),
-#             card_count = release_set['num_of_cards'],
-#             set_code = release_set['set_code']
-#         )
-#         # with app.app_context():
-#         db.session.add(pack)
-#         db.session.flush()
-#         return pack.id , pack.name
-#     except:
-#         error_name = release_set['set_name']
-#         return error_name
-
-# def createDBCard(card): #card is the card_obj from the API
-#     #lets assume that we have a valid card to be added 
-#     #upload the card image to s3, use the function we already have
-#     #try to create the card
-    
-#     #s3 upload function
-
-#     try:
-#         url = 'temp' #whatever the s3 function returns
-#         new_card = Card(
-#             yg_pro_id = card['id'],
-#             name = card['name'],
-#             description = card['desc'],
-#             attack = card.get('atk'),
-#             defense = card.get('def'), #card['def'] if card['def'] else None,
-#             level = card.get('level'),
-#             isEffect = False,
-#             isTuner = False,
-#             isFlip = False,
-#             isSpirit = False,
-#             isUnion = False,
-#             isGemini = False,
-#             isPendulum = False,
-#             isRitual = False,
-#             isToon = False,
-#             isFusion = False,
-#             isSynchro = False,
-#             isXYZ = False,
-#             isLink = False,
-#             card_type = card.get('card_type'),
-#             card_race = card.get('race'), 
-#             card_attribute = card.get('attribute'),
-#             LegalDate = None,
-#             card_image = url,
-#             frameType = card['frameType']
-#         )
-        
-#         #toggle all of the cards flags as well. 
-#         db.session.add(new_card)
-#         db.session.flush()
-#         return new_card.id
-#     except: #error creating the card object
-#         print(f'Error creating card {card["id"]}')
-#         return card['id'] #add to the error list
-
-# def createDBCardinSet(release_set_id, card_id, set_name,card_obj):
-
-#     new_card_list = []
-
-#     for singleRelease in card_obj['card_sets']:
-#         if singleRelease['set_name'] == set_name:
-#             print('we made it ')
-#             try: 
-#                 new_release = CardinSet(
-#                     card_id = card_id,
-#                     set_id = release_set_id,
-#                     card_code = singleRelease['set_code'],
-#                     rarity = singleRelease['set_rarity']
-#                 )
-#                 new_card_list.append(new_release)
-#             except:
-#                 print(f'Error creating {card_id} in {set_name}')
-#         db.session.add_all(new_card_list)
-#     return new_card_list
-
-# def fillcards(): #toggle the card flags
-#     pass
 
 if __name__ == "__main__":
 

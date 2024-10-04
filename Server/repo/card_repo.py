@@ -13,8 +13,8 @@ class CardRepository(ReadOnlyRepositoryInterface):
         'card_race' : lambda value: Card.card_race.ilike(f'%{value}%'),
         'ygo_pro_id' : lambda value: Card.yg_pro_id==value,
         'atk_is_less' : lambda value : Card.attack < value,
-        'atk_is_greater' : lambda value: Card,
-        'atk_is_equal' : lambda value : Card
+        'atk_is_greater' : lambda value: Card.attack > value,
+        'atk_is_equal' : lambda value : Card.attack == value
     }
 
 
