@@ -5,11 +5,11 @@ import boto3
 
 from config import db
 from models import ReleaseSet, Card, CardinSet
-from seed import upload_images
+# from Server.db_utils.seed import upload_images
 import requests
 
-session = boto3.Session(profile_name='shamsk')
-s3 = session.client('s3')
+# session = boto3.Session(profile_name='shamsk')
+# s3 = session.client('s3')
 
 
 
@@ -119,7 +119,7 @@ def updateReleaseDates():
             release_set = ReleaseSet.query.filter(ReleaseSet.name==set_name).first()
             date = release_set["releaseDate"]
             release_date = min(release_date,date)
-        card.release_date = release_date
+        card.LegalDate = release_date
         
         #function to create AltArt as well
 

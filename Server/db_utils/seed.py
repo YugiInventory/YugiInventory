@@ -7,15 +7,12 @@ import pickle
 import time
 
 #Fill the database with card information
-
 # https://db.ygoprodeck.com/api/v7/cardinfo.php has all the card information 
-
 #Card_Sets has information on the set namde, code, rarity, 
-
 #We fill out information on the ReleaseSets, Cards, CardsinSets
-
 # session = boto3.Session(profile_name='shamsk')
 # s3 = session.client('s3')
+
 
 card_endpoint = 'https://db.ygoprodeck.com/api/v7/cardinfo.php'
 set_endpoint = 'https://db.ygoprodeck.com/api/v7/cardsets.php'
@@ -25,6 +22,7 @@ set_endpoint = 'https://db.ygoprodeck.com/api/v7/cardsets.php'
 failed_cards = []
 failed_released_cards = []
 # released_cards = []
+
 
 def upload_images(img_url,id): #imgURL is the ygoAPI link to the image, id is the ygproid from the API
     bucket_name = 'yugitorybuckettest'
@@ -219,11 +217,6 @@ def fillCards(init_cards):
         "XYZ Pendulum Effect Monster" : ['isXYZ','isPendulum','isEffect']
     }
     
-    # test_dict = {
-    #     "Ritual Effect Monster" : ['isRitual', 'isEffect'],
-    # }
-
-
     base_url = 'https://db.ygoprodeck.com/api/v7/cardinfo.php?type='
 
     print('Adding Toggles')
@@ -253,6 +246,11 @@ def fillCards(init_cards):
     cards_array = list(init_cards.values())
 
     return cards_array , init_cards
+
+def create_release_sets():
+    pass
+
+
 
 
 if __name__ == "__main__":

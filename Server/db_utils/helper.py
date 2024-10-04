@@ -1,8 +1,7 @@
 import requests
 import time
 import boto3
-from app import app
-from config import db
+from config import db , app
 from models import *
 from sqlalchemy import text
 from tempfile import NamedTemporaryFile
@@ -11,9 +10,9 @@ from tempfile import NamedTemporaryFile
 #Helper Functions
 
 #testing imports
-from Server.db_utils.testingfunctions import deleteSet
+# from Server.db_utils.testingfunctions import deleteSet
 
-from DB_modification_functions import createDBCard, createDBCardinSet , createDBReleaseSet
+from db_utils.DB_modification_functions import createDBCard, createDBCardinSet , createDBReleaseSet
 
 #Update Database functions
 
@@ -44,7 +43,7 @@ def upload_images(img_url,id): #imgURL is the ygoAPI link to the image, id is th
     while retries < 3: 
         try:
             img_bin = requests.get(img_url).content
-            with NamedTemporaryFile(suffix="'jpg") as temp_file:
+            with NamedTemporaryFile(suffix="jpg") as temp_file:
                 temp_file.write(img_bin)
                 file_name=temp_file.name
                 s3.upload_file(file_name,bucket_name,s3_key)
@@ -109,7 +108,7 @@ def createDBAltArt(card_images_arr,card_id,default_id):
     if len(card_images_arr) > 1:
         for alt_art in card_images_arr:
             if alt_art["id"] != default_id:
-                s3_url = upload_images(alt_art["image_url_small"],alt_art["id"])
+                s3_url = 'la' #upload_images(alt_art["image_url_small"],alt_art["id"])
                 new_alt_art = AltArt(
                     card_id = card_id,
                     card_image = s3_url,
@@ -158,7 +157,7 @@ def toggleDBcardSkeletonbools(init_cards):
         toggles = type_endpoint_dict[key]
         req_url = base_url + key
 
-        req_info = requests.get(req_url)
+        req_info = requests.get(req_url, timeout=30.0)
         card_data = req_info.json()
         print(f'Current Key {key}')
         total_entries = len(card_data['data'])
@@ -169,9 +168,9 @@ def toggleDBcardSkeletonbools(init_cards):
                 card_info = init_cards[card['id']]
                 #update card toggles
                 for toggle in toggles:
-                    setattr(card_info, toggle , True)
+                    setattr(card_info[1], toggle , True)
                 #update dict
-                init_cards[card['id']] = card_info
+                # init_cards[card['id']] = card_info
                 print(f'{i} of {total_entries}')
     cards_array = list(init_cards.values())
 
