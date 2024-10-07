@@ -34,9 +34,9 @@ const Inventory = () => {
     const fetchCards = async () => {
       try {
         const token = await SecureStore.getItemAsync("accessToken");
-        // console.log(token);
-        // const isExpired = await isTokenExpired();
-        // console.log(isExpired);
+        console.log(token);
+        const isExpired = await isTokenExpired();
+        console.log(isExpired);
         const response = await fetch(
           `${BASE_URL_}/inventory/getUserInventory`,
           {
@@ -45,8 +45,8 @@ const Inventory = () => {
         );
         const data = await response.json();
         // console.log(await getUserId());
-        setAllCards(data.cards);
-        // console.log(allCards[9].cardinSet.card.attack);
+        setAllCards(data.inventory);
+        // console.log(data.inventory[0].cardinSet.card.name);
         setIsLoading(false);
       } catch (error) {
         console.error("Error fetching cards:", error);
@@ -78,12 +78,12 @@ const Inventory = () => {
     setCard("");
   };
 
-  const QuantityModal = () => {
+  const QuantityModal = ({ item }) => {
     return (
       <View>
-        <Button title="add" />
-        <Text style={styles.quantityCount}>0</Text>
-        <Button title="remove" />
+        <Button title="+" />
+        <Text style={styles.quantityCount}>{item.quantity}</Text>
+        <Button title="-" />
       </View>
     );
   };
@@ -110,7 +110,7 @@ const Inventory = () => {
           {item.cardinSet.card.description}
         </Text>
       </View>
-      <QuantityModal />
+      <QuantityModal item={item} />
     </View>
   );
 
