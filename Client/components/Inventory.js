@@ -17,6 +17,7 @@ import {
   isTokenExpired,
 } from "../services/AuthFunctions";
 import PaginationBar from "../services/Pagination";
+import QuantityModal from "./QuantityModal";
 import * as SecureStore from "expo-secure-store";
 
 const Inventory = () => {
@@ -25,10 +26,6 @@ const Inventory = () => {
   const [card, setCard] = useState("");
   // Search bar results
   const [searchData, setSearchData] = useState([]);
-  // Create Search Bar
-  // Create function searching by card name or ID (handle in request??)
-  // Update state with user input
-  // Use state to update search params
 
   useEffect(() => {
     const fetchCards = async () => {
@@ -58,7 +55,6 @@ const Inventory = () => {
   }, []);
 
   const changeText = (e) => {
-    // console.log(e);
     setCard(e);
   };
 
@@ -67,26 +63,17 @@ const Inventory = () => {
       console.log("please enter a valid value");
       return null;
     }
-    console.log(card);
+    // console.log(card);
     const data = await inventoryCardSearch(card);
     if (data === null) {
       console.log("No Cards Found!");
     } else {
-      // console.log(data.cards);
+      // console.log(data.inventory);
       setSearchData(data.inventory);
     }
     setCard("");
   };
 
-  const QuantityModal = ({ item }) => {
-    return (
-      <View>
-        <Button title="+" />
-        <Text style={styles.quantityCount}>{item.quantity}</Text>
-        <Button title="-" />
-      </View>
-    );
-  };
   const renderItem = ({ item }) => (
     <View style={styles.row}>
       <Image
@@ -141,7 +128,6 @@ const Inventory = () => {
         <Button title="Search" onPress={handleSearch} />
       </View>
       <FlatList
-        // All cards in pool
         data={searchData.length > 0 ? searchData : allCards}
         keyExtractor={(item) => item.id.toString()}
         renderItem={renderItem}
@@ -228,9 +214,6 @@ const styles = StyleSheet.create({
     marginTop: 20,
     fontSize: 16,
     color: "#666",
-  },
-  quantityCount: {
-    textAlign: "center",
   },
 });
 
