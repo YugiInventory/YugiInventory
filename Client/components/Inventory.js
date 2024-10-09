@@ -73,7 +73,7 @@ const Inventory = () => {
       console.log("No Cards Found!");
     } else {
       // console.log(data.cards);
-      setSearchData(data.cards);
+      setSearchData(data.inventory);
     }
     setCard("");
   };

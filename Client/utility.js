@@ -1,4 +1,4 @@
-import BASE_URL_ from "./services/AuthFunctions";
+import { BASE_URL_ } from "./services/AuthFunctions";
 import * as SecureStore from "expo-secure-store";
 
 const storeAccessToken = async (accessToken) => {
